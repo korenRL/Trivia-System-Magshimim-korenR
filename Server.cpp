@@ -5,7 +5,7 @@
 
 void Server::run()
 {
-	std::thread listenerThread(&Communicator::startHandleRequests, &m_communicator);
+	std::thread listenerThrea	d(&Communicator::startHandleRequests, &m_communicator);
 	listenerThread.detach();
 	handleConsoleInput();
 }
