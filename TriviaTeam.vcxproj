@@ -118,5 +118,16 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="json.hpp" />
+    <ClInclude Include="JsonResponsePacketSerializer.h" />
+    <ClInclude Include="structs.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="JsonRequestPacketDeserializer.cpp" />
+    <ClCompile Include="JsonResponsePacketSerializer.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
