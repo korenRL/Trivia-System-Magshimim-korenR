@@ -5,7 +5,7 @@ IRequestHandler* RequestHandlerFactory::createRequestHandler(IRequestHandler* cu
 {
 	if (dynamic_cast<LoginRequestHandler*>(currentHandler) != nullptr)
 	{
-		return new MenuRequestHandler(loginManager);
+		return new MenuRequestHandler(loginManager, nullptr);
 	}
 
 	return nullptr;

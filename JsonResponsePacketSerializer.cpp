@@ -45,3 +45,57 @@ std::vector<unsigned char> JsonResponsePacketSerializer::serializeSignupResponse
     std::string jsonStr = j.dump();
     return buildPacket(ResponseCode::SIGNUP_RES, jsonStr);
 }
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeGetRoomsResponse(const GetRoomsResponse& response)
+{
+    json j;
+    j["rooms"] = json::array();
+    for (const auto& room : response.rooms)
+    {
+        json r;
+        r["id"] = room.id;
+        r["name"] = room.name;
+        r["maxPlayers"] = room.maxPlayers;
+        r["numOfQuestions"] = room.numOfQuestions;
+        r["timePerQuestion"] = room.timePerQuestion;
+        j["rooms"].push_back(r);
+    }
+
+    std::string jsonStr = j.dump();
+    return buildPacket(13, jsonStr); // 13 = GetRoomRes (TODO this later)
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeCreateRoomResponse(const CreateRoomResponse& response)
+{
+    json j;
+    j["status"] = response.status;
+    j["roomId"] = response.roomId;
+
+    std::string jsonStr = j.dump();
+    return buildPacket(14, jsonStr); // SAME HERE, TODO.
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeJoinRoomResponse(const JoinRoomResponse& response)
+{
+    json j;
+    j["status"] = response.status;
+    std::string jsonStr = j.dump();
+    return buildPacket(15, jsonStr); // SAME HERE, TODO.
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeGetPlayersInRoomRespponse(const GetPlayersInRoomResponse& response)
+{
+    json j;
+    j["players"] = response.players;
+    std::string jsonStr = j.dump();
+    return buildPacket(16, jsonStr); // SAME HERE, TODO.
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeLeaveRoomResponse(const LeaveRoomResponse& response)
+{
+    json j;
+    j["status"] = response.status;
+    std::string jsonStr = j.dump();
+    return buildPacket(17, jsonStr); // SAME HERE, TODO.
+}
+

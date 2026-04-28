@@ -12,6 +12,7 @@
 #include "LoginRequestHandler.h"
 #include "SqliteDataBase.h"
 #include "LoginManager.h"
+#include "RoomManager.h"
 
 #define SERVER_PORT 8826
 #define HELLO_LENGTH 5
@@ -34,4 +35,5 @@ private:
 
 	SqliteDataBase* m_database;
 	LoginManager* m_loginManager;
+	RoomManager* m_roomManager;
 };

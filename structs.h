@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "RoomManager.h"
 
 enum ResponseCode : unsigned char {
     ERROR_RES = 10,
@@ -16,5 +17,27 @@ struct LoginResponse {
 };
 
 struct SignupResponse {
+    unsigned int status;
+};
+
+struct GetRoomsResponse {
+    std::vector<Room> rooms;
+};
+
+struct CreateRoomResponse {
+    unsigned int status;
+    unsigned int roomId;
+};
+
+struct JoinRoomResponse {
+    unsigned int status;
+};
+
+struct GetPlayersInRoomResponse {
+    std::vector<std::string> players;
+};
+
+struct LeaveRoomResponse
+{
     unsigned int status;
 };

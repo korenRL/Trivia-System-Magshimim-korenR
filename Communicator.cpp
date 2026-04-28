@@ -19,6 +19,7 @@ Communicator::Communicator()
 
 	m_database = new SqliteDataBase("TriviaDB.sqlite");
 	m_loginManager = new LoginManager(m_database);
+	m_roomManager = new RoomManager();
 }
 
 Communicator::~Communicator()
@@ -36,6 +37,7 @@ Communicator::~Communicator()
 
 	delete m_loginManager;
 	delete m_database;
+	delete m_roomManager;
 
 	m_clients.clear();
 	WSACleanup();
@@ -83,7 +85,7 @@ void Communicator::startHandleRequests()
 
 		{
 			std::lock_guard<std::mutex> lock(m_clientsMutex);
-			m_clients[clientSocket] = new LoginRequestHandler(m_loginManager);
+			m_clients[clientSocket] = new LoginRequestHandler(m_loginManager);;
 		}
 
 		std::thread t(&Communicator::handleNewClient, this, clientSocket);
