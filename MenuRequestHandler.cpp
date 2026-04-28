@@ -2,7 +2,7 @@
 #include "structs.h"
 #include <iostream>
 
-MenuRequestHandler::MenuRequestHandler(LoginManager* loginManager, RoomManager* roomManager) : m_loginManager(loginManager), m_roomManager(roomManager)
+MenuRequestHandler::MenuRequestHandler(LoginManager* loginManager, RoomManager* roomManager, StatisticsManager* statisticsManager) : m_loginManager(loginManager), m_roomManager(roomManager), m_statisticsManager(statisticsManager)
 {
 }
 

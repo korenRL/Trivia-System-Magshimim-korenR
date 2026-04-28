@@ -4,6 +4,7 @@
 #include "LoginRequestHandler.h"
 #include "LoginManager.h"
 #include "SqliteDataBase.h"
+#include "StatisticsManager.h"
 
 class RequestHandlerFactory
 {
