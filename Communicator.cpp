@@ -16,6 +16,9 @@ Communicator::Communicator()
 	{
 		throw std::runtime_error("Error creating socket: " + std::to_string(WSAGetLastError()));
 	}
+
+	m_database = new SqliteDataBase("TriviaDB.sqlite");
+	m_loginManager = new LoginManager(m_database);
 }
 
 Communicator::~Communicator()
@@ -30,6 +33,9 @@ Communicator::~Communicator()
 		closesocket(pair.first);
 		delete pair.second;
 	}
+
+	delete m_loginManager;
+	delete m_database;
 
 	m_clients.clear();
 	WSACleanup();
@@ -77,7 +83,7 @@ void Communicator::startHandleRequests()
 
 		{
 			std::lock_guard<std::mutex> lock(m_clientsMutex);
-			m_clients[clientSocket] = new LoginRequestHandler();
+			m_clients[clientSocket] = new LoginRequestHandler(m_loginManager);
 		}
 
 		std::thread t(&Communicator::handleNewClient, this, clientSocket);

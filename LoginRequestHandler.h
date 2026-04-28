@@ -1,12 +1,22 @@
 #pragma once
 
 #include "IRequestHandler.h"
+#include "LoginManager.h"
+#include "Requests.h"
+#include "JsonRequestPacketDeserializer.h"
+#include "JsonResponsePacketSerializer.h"
+
+#define LOGIN_CODE 1
+#define SIGNUP_CODE 2
 
 class LoginRequestHandler : public IRequestHandler
 {
+private:
+	LoginManager* m_loginManager;;
+
 public:
-	bool isRequestRelevant(const RequestInfo& requestInfo) override
-	{
-		return false;
-	}
+	LoginRequestHandler(LoginManager* loginManager);
+	
+	virtual bool isRequestRelevant(const RequestInfo& requestInfo) override;
+	virtual RequestResult handleRequest(const RequestInfo& requestInfo) override;
 };
