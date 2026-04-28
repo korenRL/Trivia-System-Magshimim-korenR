@@ -39,3 +39,45 @@ SignupRequest JsonRequestPacketDeserializer::deserializerSignUpRequest(const Req
 	req.email = j["mail"];
 	return req;
 }
+
+CreateRoomRequest JsonRequestPacketDeserializer::deserializerCreateRoomRequest(const RequestInfo& info)
+{
+	std::string jsonStr(info.buff.begin(), info.buff.end());;
+	json j = json::parse(jsonStr);
+
+	CreateRoomRequest req;
+	req.roomName = j["roomName"];
+	req.maxPlayers = j["maxPlayers"];
+	req.questionCount = j["questionCount"];
+	req.answerCooldown = j["answerCooldown"];
+	return req;
+}
+
+JoinRoomRequest JsonRequestPacketDeserializer::deserializerJoinRoomRequest(const RequestInfo& info)
+{
+	std::string jsonStr(info.buff.begin(), info.buff.end());
+	json j = json::parse(jsonStr);
+
+	JoinRoomRequest req;
+	req.roomId = j["roomId"];
+	return req;
+}
+
+GetPlayersInRoomRequest JsonRequestPacketDeserializer::deserializerGetPlayersInRoomRequest(const RequestInfo& info)
+{
+	std::string jsonStr(info.buff.begin(), info.buff.end());
+	json j = json::parse(jsonStr);
+
+	GetPlayersInRoomRequest req;
+	req.roomId = j["roomId"];
+	return req;
+}
+
+LeaveRoomRequest JsonRequestPacketDeserializer::deserializerLeaveRoomRequest(const RequestInfo& info)
+{
+	std::string jsonStr(info.buff.begin(), info.buff.end());
+	json j = json::parse(jsonStr);
+	LeaveRoomRequest req;
+	req.roomId = j["roomId"];
+	return req;
+}
