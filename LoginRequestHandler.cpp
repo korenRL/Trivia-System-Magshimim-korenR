@@ -1,4 +1,5 @@
 #include "LoginRequestHandler.h"
+#include "RequestHandlerFactory.h"
 #include <iostream>
 
 LoginRequestHandler::LoginRequestHandler(LoginManager* loginManager) : m_loginManager(loginManager)
@@ -46,6 +47,6 @@ RequestResult LoginRequestHandler::handleRequest(const RequestInfo& requestInfo)
 		result.response = JsonResponsePacketSerializer::serializeErrorResponse(err);
 	}
 
-	result.newHandler = nullptr;
+	result.newHandler = RequestHandlerFactory::createRequestHandler(this, requestInfo, m_loginManager, nullptr);
 	return result;
 }
