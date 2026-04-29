@@ -1,6 +1,7 @@
 #include "Communicator.h"
 #include <iostream>
 #include <string>
+#include "StatisticsManager.h"
 
 Communicator::Communicator()
 {
@@ -16,6 +17,11 @@ Communicator::Communicator()
 	{
 		throw std::runtime_error("Error creating socket: " + std::to_string(WSAGetLastError()));
 	}
+
+	m_database = new SqliteDataBase("TriviaDB.sqlite");
+	m_loginManager = new LoginManager(m_database);
+	m_roomManager = new RoomManager();
+	m_statisticsManager = new StatisticsManager(m_database);
 }
 
 Communicator::~Communicator()
@@ -30,6 +36,11 @@ Communicator::~Communicator()
 		closesocket(pair.first);
 		delete pair.second;
 	}
+
+	delete m_loginManager;
+	delete m_database;
+	delete m_roomManager;
+	delete m_statisticsManager;
 
 	m_clients.clear();
 	WSACleanup();
@@ -77,7 +88,7 @@ void Communicator::startHandleRequests()
 
 		{
 			std::lock_guard<std::mutex> lock(m_clientsMutex);
-			m_clients[clientSocket] = new LoginRequestHandler();
+			m_clients[clientSocket] = new LoginRequestHandler(m_loginManager);;
 		}
 
 		std::thread t(&Communicator::handleNewClient, this, clientSocket);
@@ -87,32 +98,71 @@ void Communicator::startHandleRequests()
 
 void Communicator::handleNewClient(SOCKET clientSocket)
 {
-	try
+	try 
 	{
-		std::string hello = "Hello"; // "Hello" message to the client
-		int sendResult = send(clientSocket, hello.c_str(), HELLO_LENGTH, 0);
-
-		if (sendResult == SOCKET_ERROR)
-		{
-			std::cerr << "Send failed: " << WSAGetLastError() << std::endl;
-			throw std::runtime_error("Send failed");
-		}
+		std::string hello = "Hello";
+		send(clientSocket, hello.c_str(), HELLO_LENGTH, 0);
 
 		char buffer[HELLO_LENGTH + 1] = { 0 };
-		int received = recv(clientSocket, buffer, HELLO_LENGTH, 0);
-		if (received == SOCKET_ERROR)
+		recv(clientSocket, buffer, HELLO_LENGTH, 0);
+
+		std::cout << "Client connected and handshake done." << std::endl;
+
+		while (true)
 		{
-			std::cerr << "Recv failed: " << WSAGetLastError() << std::endl;
-			throw std::runtime_error("Recv failed");
-		}
-		else if (received == 0)
-		{
-			std::cout << "Client disconnected." << std::endl;
-		}
-		else
-		{
-			buffer[received] = '\0';
-			std::cout << "Client sent: " << buffer << std::endl;
+			unsigned char header[5] = { 0 };
+			int bytesRecevied = recv(clientSocket, (char*)header, 5, 0);
+
+			if (bytesRecevied <= 0)
+			{
+				std::cout << "Client disconnected." << std::endl;
+				break;
+			}
+
+			RequestInfo requestInfo;
+			requestInfo.messageCode = header[0];
+
+			unsigned int dataSize = 0;
+			dataSize |= (unsigned int)header[1] << 24;
+			dataSize |= (unsigned int)header[2] << 16;
+			dataSize |= (unsigned int)header[3] << 8;
+			dataSize |= (unsigned int)header[4];
+
+			std::vector<unsigned char> bufferVec(dataSize);
+			if (dataSize > 0)
+			{
+				recv(clientSocket, (char*)bufferVec.data(), dataSize, 0);
+			}
+
+			requestInfo.buff = bufferVec;
+			requestInfo.receivalTime = std::time(NULL);
+
+			IRequestHandler* handler = nullptr;
+			{
+				std::lock_guard<std::mutex> lock(m_clientsMutex);
+				if (m_clients.find(clientSocket) != m_clients.end())
+				{
+					handler = m_clients[clientSocket];
+				}
+			}
+
+			if (handler && handler->isRequestRelevant(requestInfo))
+			{
+				RequestResult result = handler->handleRequest(requestInfo);
+
+
+				if (!result.response.empty())
+				{
+					send(clientSocket, (char*)result.response.data(), result.response.size(), 0);
+				}
+
+				if (result.newHandler != nullptr)
+				{
+					std::lock_guard<std::mutex> lock(m_clientsMutex);
+					delete m_clients[clientSocket];
+					m_clients[clientSocket] = result.newHandler;
+				}
+			}
 		}
 	}
 	catch (std::exception& e)
@@ -121,7 +171,6 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 	}
 
 	closesocket(clientSocket);
-
 	std::lock_guard<std::mutex> lock(m_clientsMutex);
 	if (m_clients.find(clientSocket) != m_clients.end())
 	{

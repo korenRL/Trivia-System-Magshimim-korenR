@@ -10,6 +10,10 @@
 
 #include "IRequestHandler.h"
 #include "LoginRequestHandler.h"
+#include "SqliteDataBase.h"
+#include "LoginManager.h"
+#include "RoomManager.h"
+#include "StatisticsManager.h"
 
 #define SERVER_PORT 8826
 #define HELLO_LENGTH 5
@@ -29,4 +33,9 @@ private:
 
 	void bindAndListen();
 	void handleNewClient(SOCKET clientSocker);
+
+	SqliteDataBase* m_database;
+	LoginManager* m_loginManager;
+	RoomManager* m_roomManager;
+	StatisticsManager* m_statisticsManager;
 };
