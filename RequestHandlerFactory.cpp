@@ -1,12 +1,27 @@
 #include "RequestHandlerFactory.h"
-#include "MenuRequestHandler.h"
 
-IRequestHandler* RequestHandlerFactory::createRequestHandler(IRequestHandler* currentHandler, const RequestInfo& requestInfo, LoginManager* loginManager, SqliteDataBase* database)
+RequestHandlerFactory::RequestHandlerFactory(SqliteDataBase* database,
+	LoginManager* loginManager,
+	RoomManager* roomManager,
+	StatisticsManager* statisticsManager)
 {
-	if (dynamic_cast<LoginRequestHandler*>(currentHandler) != nullptr)
-	{
-		return new MenuRequestHandler(loginManager, nullptr, nullptr);
-	}
+	m_database = database;
+	m_loginManager = loginManager;
+	m_roomManager = roomManager;
+	m_statisticsManager = statisticsManager;
+}
 
-	return nullptr;
+IRequestHandler* RequestHandlerFactory::createLoginRequestHandler()
+{
+	return new LoginRequestHandler(m_loginManager, this);
+}
+
+IRequestHandler* RequestHandlerFactory::createMenuRequestHandler(const std::string& username)
+{
+	return new MenuRequestHandler(
+		m_loginManager,
+		m_roomManager,
+		m_statisticsManager,
+		username
+	);
 }

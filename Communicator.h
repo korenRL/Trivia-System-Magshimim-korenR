@@ -9,11 +9,7 @@
 #include <mutex>
 
 #include "IRequestHandler.h"
-#include "LoginRequestHandler.h"
-#include "SqliteDataBase.h"
-#include "LoginManager.h"
-#include "RoomManager.h"
-#include "StatisticsManager.h"
+#include "RequestHandlerFactory.h"
 
 #define SERVER_PORT 8826
 #define HELLO_LENGTH 5
@@ -21,7 +17,7 @@
 class Communicator
 {
 public:
-	Communicator();
+	Communicator(RequestHandlerFactory* handlerFactory);
 	~Communicator();
 
 	void startHandleRequests();
@@ -30,12 +26,8 @@ private:
 	SOCKET m_serverSocket;
 	std::map<SOCKET, IRequestHandler*> m_clients;
 	std::mutex m_clientsMutex;
+	RequestHandlerFactory* m_handlerFactory;
 
 	void bindAndListen();
-	void handleNewClient(SOCKET clientSocker);
-
-	SqliteDataBase* m_database;
-	LoginManager* m_loginManager;
-	RoomManager* m_roomManager;
-	StatisticsManager* m_statisticsManager;
+	void handleNewClient(SOCKET clientSocket);
 };

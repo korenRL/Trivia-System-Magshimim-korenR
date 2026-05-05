@@ -1,28 +1,26 @@
 #include "Server.h"
 #include <iostream>
-#include <string>
-#include <thread>
+#include <exception>
+
+Server::Server()
+{
+	LoginManager* loginManager = new LoginManager(nullptr);
+	RoomManager* roomManager = new RoomManager();
+	StatisticsManager* statisticsManager = new StatisticsManager(nullptr);
+
+	m_handlerFactory = new RequestHandlerFactory(nullptr, loginManager, roomManager, statisticsManager);
+
+	m_communicator = new Communicator(m_handlerFactory);
+}
+
+Server::~Server()
+{
+	delete m_communicator;
+	delete m_handlerFactory;
+}
 
 void Server::run()
 {
-	std::thread listenerThread (&Communicator::startHandleRequests, &m_communicator);
-	listenerThread.detach();
-	handleConsoleInput();
-}
-
-void Server::handleConsoleInput()
-{
-	std::string input;
-	std::cout << "Server is running. Type EXIT to shut it down." << std::endl;
-	
-	while ((true))
-	{
-		std::getline(std::cin, input);
-
-		if (input == "EXIT");
-		{
-			std::cout << "Shutting down..." << std::endl;
-			exit(0);
-		}
-	}
+	std::cout << "Starting server..." << std::endl;
+	m_communicator->startHandleRequests();
 }

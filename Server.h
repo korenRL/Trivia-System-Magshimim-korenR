@@ -1,13 +1,20 @@
 #pragma once
 
 #include "Communicator.h"
+#include "RequestHandlerFactory.h"
+#include "LoginManager.h"
+#include "RoomManager.h"
+#include "StatisticsManager.h"
 
 class Server
 {
-public:
-	void run();
-
 private:
-	Communicator m_communicator;
-	void handleConsoleInput();
+	RequestHandlerFactory* m_handlerFactory;
+	Communicator* m_communicator;
+
+public:
+	Server();
+	~Server();
+
+	void run();
 };

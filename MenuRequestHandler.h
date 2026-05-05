@@ -2,12 +2,13 @@
 
 #include "IRequestHandler.h"
 #include "LoginManager.h"
-#include "RequestHandlerFactory.h"
+
 #include "RoomManager.h"
 #include "Requests.h"
 #include "JsonRequestPacketDeserializer.h"
 #include "JsonResponsePacketSerializer.h"
 #include "StatisticsManager.h"
+#include <string>
 
 #define CREATE_ROOM_CODE 3
 #define GET_ROOMS_CODE 4
@@ -20,11 +21,14 @@ private:
 	LoginManager* m_loginManager;
 	RoomManager* m_roomManager;
 	StatisticsManager* m_statisticsManager;
+	std::string m_username;
 
 public:
-	MenuRequestHandler(LoginManager* loginManager, RoomManager* roomManager, StatisticsManager* statisticsManager);
+	MenuRequestHandler(LoginManager* loginManager,
+		RoomManager* roomManager,
+		StatisticsManager* statisticsManager,
+		const std::string& username);
 
 	virtual bool isRequestRelevant(const RequestInfo& requestInfo) override;
 	virtual RequestResult handleRequest(const RequestInfo& requestInfo) override;
 };
-

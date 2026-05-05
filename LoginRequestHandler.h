@@ -9,14 +9,21 @@
 #define LOGIN_CODE 1
 #define SIGNUP_CODE 2
 
+class RequestHandlerFactory;
+
 class LoginRequestHandler : public IRequestHandler
 {
 private:
-	LoginManager* m_loginManager;;
+	LoginManager* m_loginManager;
+	RequestHandlerFactory* m_handlerFactory;
+
+	
+	RequestResult login(const RequestInfo& requestInfo);
+	RequestResult signup(const RequestInfo& requestInfo);
 
 public:
-	LoginRequestHandler(LoginManager* loginManager);
-	
+	LoginRequestHandler(LoginManager* loginManager, RequestHandlerFactory* handlerFactory);
+
 	virtual bool isRequestRelevant(const RequestInfo& requestInfo) override;
 	virtual RequestResult handleRequest(const RequestInfo& requestInfo) override;
 };
