@@ -33,6 +33,7 @@ private:
 
 	void bindAndListen();
 	void handleNewClient(SOCKET clientSocker);
+	bool receiveExact(SOCKET socket, char* buffer, int size);
 
 	SqliteDataBase* m_database;
 	LoginManager* m_loginManager;

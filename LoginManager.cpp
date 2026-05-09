@@ -1,13 +1,32 @@
 #include "LoginManager.h"
 #include <iostream>
+#include <cctype>
 
 LoginManager::LoginManager(SqliteDataBase* db) : m_database(db)
 {
 }
 
+static bool isValidUsername(const std::string& username)
+{
+	if (username.empty())
+	{
+		return false;
+	}
+
+	for (char c : username)
+	{
+		if (!std::isalnum((unsigned char)c))
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 int LoginManager::login(const std::string& username, const std::string& password)
 {
-	if (!m_database)
+	if (!m_database || !isValidUsername(username))
 	{
 		return 0;
 	}
@@ -33,7 +52,7 @@ int LoginManager::login(const std::string& username, const std::string& password
 
 int LoginManager::signup(const std::string& username, const std::string& password, const std::string& email)
 {
-	if (!m_database)
+	if (!m_database || !isValidUsername(username))
 	{
 		return 0;
 	}

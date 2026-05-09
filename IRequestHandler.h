@@ -8,7 +8,7 @@ class IRequestHandler;
 
 struct RequestInfo
 {
-	int messageCode;
+	unsigned char messageCode;
 	time_t receivalTime;
 	std::vector<unsigned char> buff;
 };

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include "StatisticsManager.h"
+#include "JsonResponsePacketSerializer.h"
 
 Communicator::Communicator()
 {
@@ -88,7 +89,7 @@ void Communicator::startHandleRequests()
 
 		{
 			std::lock_guard<std::mutex> lock(m_clientsMutex);
-			m_clients[clientSocket] = new LoginRequestHandler(m_loginManager);;
+			m_clients[clientSocket] = new LoginRequestHandler(m_loginManager);
 		}
 
 		std::thread t(&Communicator::handleNewClient, this, clientSocket);
@@ -96,42 +97,77 @@ void Communicator::startHandleRequests()
 	}
 }
 
+bool Communicator::receiveExact(SOCKET socket, char* buffer, int size)
+{
+	int totalReceived = 0;
+
+	while (totalReceived < size)
+	{
+		int currentReceived = recv(socket, buffer + totalReceived, size - totalReceived, 0);
+		if (currentReceived <= 0)
+		{
+			return false;
+		}
+
+		totalReceived += currentReceived;
+	}
+
+	return true;
+}
+
 void Communicator::handleNewClient(SOCKET clientSocket)
 {
 	try 
 	{
-		std::string hello = "Hello";
-		send(clientSocket, hello.c_str(), HELLO_LENGTH, 0);
-
-		char buffer[HELLO_LENGTH + 1] = { 0 };
-		recv(clientSocket, buffer, HELLO_LENGTH, 0);
-
-		std::cout << "Client connected and handshake done." << std::endl;
-
 		while (true)
 		{
-			unsigned char header[5] = { 0 };
-			int bytesRecevied = recv(clientSocket, (char*)header, 5, 0);
+			RequestInfo requestInfo;
+			char codeChar = 0;
 
-			if (bytesRecevied <= 0)
+			if (!receiveExact(clientSocket, &codeChar, 1))
 			{
-				std::cout << "Client disconnected." << std::endl;
+				std::cout << "Client Disconnected." << std::endl;
 				break;
 			}
 
-			RequestInfo requestInfo;
-			requestInfo.messageCode = header[0];
+			unsigned char messageCode = codeChar - '0';
+			requestInfo.messageCode = messageCode;
 
-			unsigned int dataSize = 0;
-			dataSize |= (unsigned int)header[1] << 24;
-			dataSize |= (unsigned int)header[2] << 16;
-			dataSize |= (unsigned int)header[3] << 8;
-			dataSize |= (unsigned int)header[4];
+			std::string lengthStr;
+			char currentChar = 0;
+
+			bool failedReading = false;
+			while (true)
+			{
+				if (!receiveExact(clientSocket, &currentChar, 1))
+				{
+					std::cout << "Client disconnected while reading length." << std::endl;
+					failedReading = true;
+					break;
+				}
+
+				if (currentChar == '{')
+				{
+					break;
+				}
+
+				lengthStr += currentChar;
+			}
+			
+			if (failedReading)
+			{
+				break;
+			}
+
+			unsigned int dataSize = std::stoi(lengthStr);
 
 			std::vector<unsigned char> bufferVec(dataSize);
-			if (dataSize > 0)
+			bufferVec[0] = '{';
+
+			if (dataSize > 1 && !receiveExact(clientSocket, (char*)bufferVec.data() + 1, dataSize - 1))
 			{
-				recv(clientSocket, (char*)bufferVec.data(), dataSize, 0);
+				std::cout << "Client disconnected while sending data." << std::endl;
+				break;
 			}
 
 			requestInfo.buff = bufferVec;
@@ -162,6 +198,13 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 					delete m_clients[clientSocket];
 					m_clients[clientSocket] = result.newHandler;
 				}
+			}
+			else
+			{
+				ErrorResponse err;
+				err.message = "Invalid request";
+				std::vector<unsigned char> response = JsonResponsePacketSerializer::serializeErrorResponse(err);
+				send(clientSocket, (char*)response.data(), response.size(), 0);
 			}
 		}
 	}

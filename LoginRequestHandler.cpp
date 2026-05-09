@@ -47,6 +47,5 @@ RequestResult LoginRequestHandler::handleRequest(const RequestInfo& requestInfo)
 		result.response = JsonResponsePacketSerializer::serializeErrorResponse(err);
 	}
 
-	result.newHandler = RequestHandlerFactory::createRequestHandler(this, requestInfo, m_loginManager, nullptr);
 	return result;
 }
