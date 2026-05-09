@@ -1,28 +1,27 @@
 #include "Server.h"
+#include "SqliteDataBase.h" 
 #include <iostream>
-#include <string>
-#include <thread>
+
+Server::Server()
+	: m_database(new SqliteDataBase("TriviaDB.sqlite")),
+	m_handlerFactory(m_database), 
+	m_communicator(m_handlerFactory) 
+{
+	
+}
+
+Server::~Server()
+{
+	if (m_database != nullptr)
+	{
+		delete m_database;
+		m_database = nullptr;
+	}
+}
 
 void Server::run()
 {
-	std::thread listenerThread (&Communicator::startHandleRequests, &m_communicator);
-	listenerThread.detach();
-	handleConsoleInput();
-}
+	std::cout << "Starting Server..." << std::endl;
 
-void Server::handleConsoleInput()
-{
-	std::string input;
-	std::cout << "Server is running. Type EXIT to shut it down." << std::endl;
-	
-	while ((true))
-	{
-		std::getline(std::cin, input);
-
-		if (input == "EXIT");
-		{
-			std::cout << "Shutting down..." << std::endl;
-			exit(0);
-		}
-	}
+	m_communicator.startHandleRequests();
 }

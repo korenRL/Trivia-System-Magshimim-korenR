@@ -1,42 +1,30 @@
+
 #pragma once
-#pragma comment(lib, "ws2_32.lib")
-
 #include <WinSock2.h>
-#include <Windows.h>
+#pragma comment(lib, "Ws2_32.lib")
 #include <map>
-#include <string>
-#include <thread>
 #include <mutex>
-
+#include <thread>
 #include "IRequestHandler.h"
-#include "LoginRequestHandler.h"
-#include "SqliteDataBase.h"
-#include "LoginManager.h"
-#include "RoomManager.h"
-#include "StatisticsManager.h"
+#include "RequestHandlerFactory.h"
 
 #define SERVER_PORT 8826
-#define HELLO_LENGTH 5
 
 class Communicator
 {
 public:
-	Communicator();
+	
+	Communicator(RequestHandlerFactory& handlerFactory);
 	~Communicator();
 
 	void startHandleRequests();
 
 private:
+	void bindAndListen();
+	void handleNewClient(SOCKET clientSocket);
+
 	SOCKET m_serverSocket;
 	std::map<SOCKET, IRequestHandler*> m_clients;
+	RequestHandlerFactory& m_handlerFactory; 
 	std::mutex m_clientsMutex;
-
-	void bindAndListen();
-	void handleNewClient(SOCKET clientSocker);
-	bool receiveExact(SOCKET socket, char* buffer, int size);
-
-	SqliteDataBase* m_database;
-	LoginManager* m_loginManager;
-	RoomManager* m_roomManager;
-	StatisticsManager* m_statisticsManager;
 };

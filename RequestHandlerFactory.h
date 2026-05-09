@@ -9,5 +9,13 @@
 class RequestHandlerFactory
 {
 public:
-	static IRequestHandler* createRequestHandler(IRequestHandler* currentHandler, const RequestInfo& requestInfo, LoginManager* loginManager, SqliteDataBase* database);
+	RequestHandlerFactory(SqliteDataBase* database);
+	~RequestHandlerFactory();
+
+	LoginRequestHandler* createLoginRequestHandler();
+
+private:
+	SqliteDataBase* m_database;
+	LoginManager* m_loginManager;
+	StatisticsManager* m_statisticsManager;
 };

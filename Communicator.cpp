@@ -1,10 +1,10 @@
+
 #include "Communicator.h"
 #include <iostream>
 #include <string>
-#include "StatisticsManager.h"
-#include "JsonResponsePacketSerializer.h"
+#include <vector>
 
-Communicator::Communicator()
+Communicator::Communicator(RequestHandlerFactory& handlerFactory) : m_handlerFactory(handlerFactory)
 {
 	WSADATA wsaData;
 	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -18,11 +18,6 @@ Communicator::Communicator()
 	{
 		throw std::runtime_error("Error creating socket: " + std::to_string(WSAGetLastError()));
 	}
-
-	m_database = new SqliteDataBase("TriviaDB.sqlite");
-	m_loginManager = new LoginManager(m_database);
-	m_roomManager = new RoomManager();
-	m_statisticsManager = new StatisticsManager(m_database);
 }
 
 Communicator::~Communicator()
@@ -37,11 +32,6 @@ Communicator::~Communicator()
 		closesocket(pair.first);
 		delete pair.second;
 	}
-
-	delete m_loginManager;
-	delete m_database;
-	delete m_roomManager;
-	delete m_statisticsManager;
 
 	m_clients.clear();
 	WSACleanup();
@@ -85,11 +75,9 @@ void Communicator::startHandleRequests()
 			continue;
 		}
 
-		std::cout << "Client connected." << std::endl;
-
 		{
 			std::lock_guard<std::mutex> lock(m_clientsMutex);
-			m_clients[clientSocket] = new LoginRequestHandler(m_loginManager);
+			m_clients[clientSocket] = m_handlerFactory.createLoginRequestHandler();
 		}
 
 		std::thread t(&Communicator::handleNewClient, this, clientSocket);
@@ -97,77 +85,51 @@ void Communicator::startHandleRequests()
 	}
 }
 
-bool Communicator::receiveExact(SOCKET socket, char* buffer, int size)
-{
-	int totalReceived = 0;
-
-	while (totalReceived < size)
-	{
-		int currentReceived = recv(socket, buffer + totalReceived, size - totalReceived, 0);
-		if (currentReceived <= 0)
-		{
-			return false;
-		}
-
-		totalReceived += currentReceived;
-	}
-
-	return true;
-}
-
 void Communicator::handleNewClient(SOCKET clientSocket)
 {
-	try 
+	try
 	{
 		while (true)
 		{
+			unsigned char header[5] = { 0 };
+
+			int bytesReceived = 0;
+			while (bytesReceived < 5)
+			{
+				int res = recv(clientSocket, (char*)header + bytesReceived, 5 - bytesReceived, 0);
+				if (res <= 0) break;
+				bytesReceived += res;
+			}
+
+			if (bytesReceived < 5)
+			{
+				break;
+			}
+
 			RequestInfo requestInfo;
-			char codeChar = 0;
+			requestInfo.messageCode = header[0];
 
-			if (!receiveExact(clientSocket, &codeChar, 1))
-			{
-				std::cout << "Client Disconnected." << std::endl;
-				break;
-			}
-
-			unsigned char messageCode = codeChar - '0';
-			requestInfo.messageCode = messageCode;
-
-			std::string lengthStr;
-			char currentChar = 0;
-
-			bool failedReading = false;
-			while (true)
-			{
-				if (!receiveExact(clientSocket, &currentChar, 1))
-				{
-					std::cout << "Client disconnected while reading length." << std::endl;
-					failedReading = true;
-					break;
-				}
-
-				if (currentChar == '{')
-				{
-					break;
-				}
-
-				lengthStr += currentChar;
-			}
-			
-			if (failedReading)
-			{
-				break;
-			}
-
-			unsigned int dataSize = std::stoi(lengthStr);
+			unsigned int dataSize = 0;
+			dataSize |= (unsigned int)header[1] << 24;
+			dataSize |= (unsigned int)header[2] << 16;
+			dataSize |= (unsigned int)header[3] << 8;
+			dataSize |= (unsigned int)header[4];
 
 			std::vector<unsigned char> bufferVec(dataSize);
-			bufferVec[0] = '{';
-
-			if (dataSize > 1 && !receiveExact(clientSocket, (char*)bufferVec.data() + 1, dataSize - 1))
+			if (dataSize > 0)
 			{
-				std::cout << "Client disconnected while sending data." << std::endl;
-				break;
+				unsigned int payloadReceived = 0;
+				while (payloadReceived < dataSize)
+				{
+					int res = recv(clientSocket, (char*)bufferVec.data() + payloadReceived, dataSize - payloadReceived, 0);
+					if (res <= 0) break;
+					payloadReceived += res;
+				}
+
+				if (payloadReceived < dataSize)
+				{
+					break;
+				}
 			}
 
 			requestInfo.buff = bufferVec;
@@ -186,25 +148,17 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 			{
 				RequestResult result = handler->handleRequest(requestInfo);
 
-
 				if (!result.response.empty())
 				{
 					send(clientSocket, (char*)result.response.data(), result.response.size(), 0);
 				}
 
-				if (result.newHandler != nullptr)
+				if (result.newHandler != nullptr && result.newHandler != handler)
 				{
 					std::lock_guard<std::mutex> lock(m_clientsMutex);
 					delete m_clients[clientSocket];
 					m_clients[clientSocket] = result.newHandler;
 				}
-			}
-			else
-			{
-				ErrorResponse err;
-				err.message = "Invalid request";
-				std::vector<unsigned char> response = JsonResponsePacketSerializer::serializeErrorResponse(err);
-				send(clientSocket, (char*)response.data(), response.size(), 0);
 			}
 		}
 	}

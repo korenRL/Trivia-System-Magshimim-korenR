@@ -1,3 +1,4 @@
+
 #include "LoginRequestHandler.h"
 #include "RequestHandlerFactory.h"
 #include <iostream>
@@ -23,11 +24,10 @@ RequestResult LoginRequestHandler::handleRequest(const RequestInfo& requestInfo)
 	if (requestInfo.messageCode == LOGIN_CODE)
 	{
 		LoginRequest loginRequest = JsonRequestPacketDeserializer::deserializerLoginRequest(requestInfo);
-
 		int status = m_loginManager->login(loginRequest.username, loginRequest.password);
-		LoginResponse response;
-		response.status = status;
 
+		LoginResponse response;
+		response.status = (status == 1) ? 0 : 1;
 		result.response = JsonResponsePacketSerializer::serializeLoginResponse(response);
 	}
 	else if (requestInfo.messageCode == SIGNUP_CODE)
@@ -36,8 +36,7 @@ RequestResult LoginRequestHandler::handleRequest(const RequestInfo& requestInfo)
 		int status = m_loginManager->signup(signupRequest.username, signupRequest.password, signupRequest.email);
 
 		SignupResponse response;
-		response.status = status;
-
+		response.status = (status == 1) ? 0 : 1;
 		result.response = JsonResponsePacketSerializer::serializeSignupResponse(response);
 	}
 	else

@@ -1,12 +1,30 @@
 #include "RequestHandlerFactory.h"
-#include "MenuRequestHandler.h"
 
-IRequestHandler* RequestHandlerFactory::createRequestHandler(IRequestHandler* currentHandler, const RequestInfo& requestInfo, LoginManager* loginManager, SqliteDataBase* database)
+// בנאי המקבל רק את מסד הנתונים
+RequestHandlerFactory::RequestHandlerFactory(SqliteDataBase* database)
+	: m_database(database), 
+	  m_loginManager(new LoginManager(database)),
+	  m_statisticsManager(new StatisticsManager(database))
 {
-	if (dynamic_cast<LoginRequestHandler*>(currentHandler) != nullptr)
-	{
-		return new MenuRequestHandler(loginManager, nullptr, nullptr);
-	}
+}
 
-	return nullptr;
+// הורס שמשחרר את הזיכרון (זה מה שהקומפיילר חיפש!)
+RequestHandlerFactory::~RequestHandlerFactory()
+{
+	if (m_loginManager != nullptr)
+	{
+		delete m_loginManager;
+		m_loginManager = nullptr;
+	}
+	
+	if (m_statisticsManager != nullptr)
+	{
+		delete m_statisticsManager;
+		m_statisticsManager = nullptr;
+	}
+}
+
+LoginRequestHandler* RequestHandlerFactory::createLoginRequestHandler()
+{
+	return new LoginRequestHandler(m_loginManager);
 }

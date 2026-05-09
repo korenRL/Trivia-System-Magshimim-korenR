@@ -1,6 +1,5 @@
 #include "LoginManager.h"
 #include <iostream>
-#include <cctype>
 
 LoginManager::LoginManager(SqliteDataBase* db) : m_database(db)
 {
@@ -12,15 +11,6 @@ static bool isValidUsername(const std::string& username)
 	{
 		return false;
 	}
-
-	for (char c : username)
-	{
-		if (!std::isalnum((unsigned char)c))
-		{
-			return false;
-		}
-	}
-
 	return true;
 }
 
@@ -30,6 +20,8 @@ int LoginManager::login(const std::string& username, const std::string& password
 	{
 		return 0;
 	}
+
+	std::lock_guard<std::mutex> lock(m_usersMutex);
 
 	if (m_database->isUserExist(username) && m_database->isPasswordMatch(username, password))
 	{
@@ -42,11 +34,9 @@ int LoginManager::login(const std::string& username, const std::string& password
 		}
 
 		m_loggedUsers.push_back(LoggedUser(username));
-		std::cout << username << " logged in successfully" << std::endl;
 		return 1;
 	}
 
-	std::cout << "Login failed for " << username << std::endl;
 	return 0;
 }
 
@@ -57,19 +47,31 @@ int LoginManager::signup(const std::string& username, const std::string& passwor
 		return 0;
 	}
 
+	std::lock_guard<std::mutex> lock(m_usersMutex);
+
 	if (m_database->isUserExist(username))
 	{
-		std::cout << "User already exists: " << username << std::endl;
 		return 0;
 	}
 
 	if (m_database->addUser(username, password, email))
 	{
-		m_loggedUsers.push_back(LoggedUser(username));
-		std::cout << username << " signed up and logged in" << std::endl;
 		return 1;
 	}
 
-	std::cout << "Signup failed for " << username << std::endl;
 	return 0;
+}
+
+void LoginManager::logout(const std::string& username)
+{
+	std::lock_guard<std::mutex> lock(m_usersMutex);
+
+	for (auto it = m_loggedUsers.begin(); it != m_loggedUsers.end(); ++it)
+	{
+		if (it->username == username)
+		{
+			m_loggedUsers.erase(it);
+			break;
+		}
+	}
 }
