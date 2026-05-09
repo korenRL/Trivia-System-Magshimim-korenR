@@ -89,25 +89,24 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 {
 	try
 	{
-		std::string hello = "Hello";
-		send(clientSocket, hello.c_str(), HELLO_LENGTH, 0);
-
-		char buffer[HELLO_LENGTH + 1] = { 0 };
-		recv(clientSocket, buffer, HELLO_LENGTH, 0);
-
+		
 		std::cout << "Client connected and handshake done." << std::endl;
 
 		while (true)
 		{
+			//getting the first code, this is a char sended before len of payload
+			//after getting that you need to get len of payload and then by the len of the payload
+			//you are getting the payload you need
 			unsigned char header[5] = { 0 };
-			int bytesRecevied = recv(clientSocket, (char*)header, 5, 0);
+			int bytesRecevied = recv(clientSocket, (char*)&header, 5, 0);
 
 			if (bytesRecevied <= 0)
 			{
 				std::cout << "Client disconnected." << std::endl;
 				break;
 			}
-
+			std::cout << header << std::endl;
+			std::cout << header[0] << std::endl;
 			RequestInfo requestInfo;
 			requestInfo.messageCode = header[0];
 

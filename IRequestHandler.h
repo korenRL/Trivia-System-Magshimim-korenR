@@ -3,12 +3,13 @@
 #include <vector>
 #include <string>
 #include <ctime>
+#include <cstddef>
 
 class IRequestHandler;
 
 struct RequestInfo
 {
-	int messageCode;
+	unsigned char messageCode;
 	time_t receivalTime;
 	std::vector<unsigned char> buff;
 };
