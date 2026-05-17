@@ -1,9 +1,10 @@
+
 #include "Communicator.h"
 #include <iostream>
 #include <string>
-#include "StatisticsManager.h"
+#include <vector>
 
-Communicator::Communicator()
+Communicator::Communicator(RequestHandlerFactory& handlerFactory) : m_handlerFactory(handlerFactory)
 {
 	WSADATA wsaData;
 	int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
@@ -17,11 +18,6 @@ Communicator::Communicator()
 	{
 		throw std::runtime_error("Error creating socket: " + std::to_string(WSAGetLastError()));
 	}
-
-	m_database = new SqliteDataBase("TriviaDB.sqlite");
-	m_loginManager = new LoginManager(m_database);
-	m_roomManager = new RoomManager();
-	m_statisticsManager = new StatisticsManager(m_database);
 }
 
 Communicator::~Communicator()
@@ -36,11 +32,6 @@ Communicator::~Communicator()
 		closesocket(pair.first);
 		delete pair.second;
 	}
-
-	delete m_loginManager;
-	delete m_database;
-	delete m_roomManager;
-	delete m_statisticsManager;
 
 	m_clients.clear();
 	WSACleanup();
@@ -84,11 +75,9 @@ void Communicator::startHandleRequests()
 			continue;
 		}
 
-		std::cout << "Client connected." << std::endl;
-
 		{
 			std::lock_guard<std::mutex> lock(m_clientsMutex);
-			m_clients[clientSocket] = new LoginRequestHandler(m_loginManager);;
+			m_clients[clientSocket] = m_handlerFactory.createLoginRequestHandler();
 		}
 
 		std::thread t(&Communicator::handleNewClient, this, clientSocket);
@@ -98,24 +87,22 @@ void Communicator::startHandleRequests()
 
 void Communicator::handleNewClient(SOCKET clientSocket)
 {
-	try 
+	try
 	{
-		std::string hello = "Hello";
-		send(clientSocket, hello.c_str(), HELLO_LENGTH, 0);
-
-		char buffer[HELLO_LENGTH + 1] = { 0 };
-		recv(clientSocket, buffer, HELLO_LENGTH, 0);
-
-		std::cout << "Client connected and handshake done." << std::endl;
-
 		while (true)
 		{
 			unsigned char header[5] = { 0 };
-			int bytesRecevied = recv(clientSocket, (char*)header, 5, 0);
 
-			if (bytesRecevied <= 0)
+			int bytesReceived = 0;
+			while (bytesReceived < 5)
 			{
-				std::cout << "Client disconnected." << std::endl;
+				int res = recv(clientSocket, (char*)header + bytesReceived, 5 - bytesReceived, 0);
+				if (res <= 0) break;
+				bytesReceived += res;
+			}
+
+			if (bytesReceived < 5)
+			{
 				break;
 			}
 
@@ -131,7 +118,18 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 			std::vector<unsigned char> bufferVec(dataSize);
 			if (dataSize > 0)
 			{
-				recv(clientSocket, (char*)bufferVec.data(), dataSize, 0);
+				unsigned int payloadReceived = 0;
+				while (payloadReceived < dataSize)
+				{
+					int res = recv(clientSocket, (char*)bufferVec.data() + payloadReceived, dataSize - payloadReceived, 0);
+					if (res <= 0) break;
+					payloadReceived += res;
+				}
+
+				if (payloadReceived < dataSize)
+				{
+					break;
+				}
 			}
 
 			requestInfo.buff = bufferVec;
@@ -150,13 +148,12 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 			{
 				RequestResult result = handler->handleRequest(requestInfo);
 
-
 				if (!result.response.empty())
 				{
 					send(clientSocket, (char*)result.response.data(), result.response.size(), 0);
 				}
 
-				if (result.newHandler != nullptr)
+				if (result.newHandler != nullptr && result.newHandler != handler)
 				{
 					std::lock_guard<std::mutex> lock(m_clientsMutex);
 					delete m_clients[clientSocket];
