@@ -11,21 +11,35 @@ SqliteDataBase::SqliteDataBase(const std::string& dbName)
 		return;
 	}
 
-	const char* sql = "CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL, email TEXT NOT NULL);";
+	const char* sqlUsers = "CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL, email TEXT NOT NULL);";
 
 	char* errMsg = nullptr;
-	res = sqlite3_exec(db, sql, nullptr, nullptr, &errMsg);
+	res = sqlite3_exec(db, sqlUsers, nullptr, nullptr, &errMsg);
 	if (res != SQLITE_OK)
 	{
-		std::cerr << "SQL error: " << errMsg << std::endl;
+		std::cerr << "SQL error (users): " << errMsg << std::endl;
+		sqlite3_free(errMsg);
+	}
+
+	const char* sqlStats = "CREATE TABLE IF NOT EXISTS statistics ("
+		"username TEXT PRIMARY KEY, "
+		"games_played INTEGER DEFAULT 0, "
+		"total_correct_answers INTEGER DEFAULT 0, "
+		"total_answers INTEGER DEFAULT 0, "
+		"average_answer_time REAL DEFAULT 0.0, "
+		"FOREIGN KEY(username) REFERENCES users(username));";
+
+	res = sqlite3_exec(db, sqlStats, nullptr, nullptr, &errMsg);
+	if (res != SQLITE_OK)
+	{
+		std::cerr << "SQL error (statistics): " << errMsg << std::endl;
 		sqlite3_free(errMsg);
 	}
 	else
 	{
-		std::cout << "Database openeed and table ready." << std::endl;
+		std::cout << "Database opened and all tables are ready." << std::endl;
 	}
 }
-
 SqliteDataBase::~SqliteDataBase()
 {
 	if (db)

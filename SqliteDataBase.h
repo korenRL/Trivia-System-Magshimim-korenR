@@ -14,7 +14,6 @@ public:
 
 	bool isUserExist(const std::string& username);
 	bool isPasswordMatch(const std::string& username, const std::string& password);
-
 private:
 	sqlite3* db;
 
