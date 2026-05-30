@@ -115,3 +115,16 @@ LeaveRoomRequest JsonRequestPacketDeserializer::deserializerLeaveRoomRequest(con
     req.roomId = j["roomId"];
     return req;
 }
+
+SubmitAnswerRequest JsonRequestPacketDeserializer::deserializerSubmitAnswerRequest(const RequestInfo& info)
+{
+    std::string jsonStr(info.buff.begin(), info.buff.end());
+    json j = json::parse(jsonStr);
+
+    if (!j.contains("answerId"))
+        throw std::runtime_error("Invalid submit answer request");
+
+    SubmitAnswerRequest req;
+    req.answerId = j["answerId"];
+    return req;
+}

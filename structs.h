@@ -21,7 +21,11 @@ enum RequestCode : unsigned char {
     CLOSE_ROOM_REQ = 21,
     START_GAME_REQ = 22,
     GET_ROOM_STATE_REQ = 23,
-    LEAVE_ROOM_REQ = 24
+    LEAVE_ROOM_REQ = 24,
+    LEAVE_GAME_REQ = 31,
+    GET_QUESTION_REQ = 32,
+    SUBMIT_ANSWER_REQ = 33,
+    GET_GAME_RESULT_REQ = 34
 };
 
 struct ErrorResponse {
@@ -77,3 +81,4 @@ struct GetRoomStateResponse
     unsigned int answerCount;
     unsigned int answerTimeout;
 };
+
