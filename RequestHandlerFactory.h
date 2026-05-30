@@ -7,7 +7,11 @@
 #include "RoomManager.h"
 #include "StatisticsManager.h"
 #include "SqliteDataBase.h"
+#include "LoginManager.h"
 #include <string>
+
+class RoomAdminRequestHandler;
+class RoomMemberRequestHandler;
 
 class RequestHandlerFactory
 {
@@ -25,4 +29,10 @@ public:
 
 	IRequestHandler* createLoginRequestHandler();
 	IRequestHandler* createMenuRequestHandler(const std::string& username);
+
+	RoomAdminRequestHandler* createRoomAdminRequestHandler(LoggedUser user, Room room);
+	RoomMemberRequestHandler* createRoomMemberRequestHandler(LoggedUser user, Room room);
+
+	RoomManager* getRoomManager();
+	StatisticsManager* getStatisticsManager();
 };

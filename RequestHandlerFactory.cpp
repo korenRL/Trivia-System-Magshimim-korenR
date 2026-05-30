@@ -1,4 +1,6 @@
 #include "RequestHandlerFactory.h"
+#include "RoomAdminRequestHandler.h"
+#include "RoomMemberRequestHandler.h"
 
 RequestHandlerFactory::RequestHandlerFactory(SqliteDataBase* database,
 	LoginManager* loginManager,
@@ -24,4 +26,24 @@ IRequestHandler* RequestHandlerFactory::createMenuRequestHandler(const std::stri
 		m_statisticsManager,
 		username
 	);
+}
+
+RoomAdminRequestHandler* RequestHandlerFactory::createRoomAdminRequestHandler(LoggedUser user, Room room)
+{
+	return new RoomAdminRequestHandler(room, user, *m_roomManager, *this);
+}
+
+RoomMemberRequestHandler* RequestHandlerFactory::createRoomMemberRequestHandler(LoggedUser user, Room room)
+{
+	return new RoomMemberRequestHandler(room, user, *m_roomManager, *this);
+}
+
+RoomManager* RequestHandlerFactory::getRoomManager()
+{
+	return m_roomManager;
+}
+
+StatisticsManager* RequestHandlerFactory::getStatisticsManager()
+{
+	return m_statisticsManager;
 }
