@@ -1,49 +1,71 @@
 #pragma once
 #include <string>
+#include <vector>
 #include "RoomManager.h"
 
 enum ResponseCode : unsigned char {
-    ERROR_RES = 10,
-    LOGIN_RES = 11,
-    SIGNUP_RES = 12,
-    CREATE_ROOM_RES = 14,
-    GET_ROOMS_RES = 13,
-    JOIN_ROOM_RES = 15,
-    GET_PLAYERS_IN_ROOM_RES = 16,
-    LEAVE_ROM_RES = 17,
+	ERROR_RES = 10,
+	LOGIN_RES = 11,
+	SIGNUP_RES = 12,
+	GET_ROOMS_RES = 13,
+	CREATE_ROOM_RES = 14,
+	JOIN_ROOM_RES = 15,
+	GET_PLAYERS_IN_ROOM_RES = 16,
+	LEAVE_ROM_RES = 17,
+	CLOSE_ROOM_RES = 18,
+	START_GAME_RES = 19,
+	GET_ROOM_STATE_RES = 20
 };
 
 struct ErrorResponse {
-    std::string message;
+	std::string message;
 };
 
 struct LoginResponse {
-    unsigned int status;
+	unsigned int status;
 };
 
 struct SignupResponse {
-    unsigned int status;
+	unsigned int status;
 };
 
 struct GetRoomsResponse {
-    std::vector<Room> rooms;
+	std::vector<Room> rooms;
 };
 
 struct CreateRoomResponse {
-    unsigned int status;
-    unsigned int roomId;
+	unsigned int status;
+	unsigned int roomId;
 };
 
 struct JoinRoomResponse {
-    unsigned int status;
+	unsigned int status;
 };
 
 struct GetPlayersInRoomResponse {
-    std::vector<std::string> players;
+	std::vector<std::string> players;
 };
 
 struct LeaveRoomResponse
 {
-    unsigned int status;
+	unsigned int status;
 };
 
+struct CloseRoomResponse
+{
+	unsigned int status;
+};
+
+struct StartGameResponse
+{
+	unsigned int status;
+};
+
+struct GetRoomStateResponse
+{
+	unsigned int status;
+	bool hasGameBegun;
+	std::vector<std::string> players;
+	unsigned int answerCount;
+	unsigned int answerTimeout;
+};
