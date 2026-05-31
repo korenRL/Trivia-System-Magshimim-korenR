@@ -30,5 +30,4 @@ private:
 
 	void bindAndListen();
 	void handleNewClient(SOCKET clientSocket);
-
 };
