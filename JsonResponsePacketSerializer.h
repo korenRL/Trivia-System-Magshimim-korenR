@@ -16,7 +16,6 @@ public:
 	static std::vector<unsigned char> serializeGetPlayersInRoomRespponse(const GetPlayersInRoomResponse& response);
 	static std::vector<unsigned char> serializeLeaveRoomResponse(const LeaveRoomResponse& response);
 
-	// פונקציות חדשות לגרסה 3.0.0
 	static std::vector<unsigned char> serializeCloseRoomResponse(const CloseRoomResponse& response);
 	static std::vector<unsigned char> serializeStartGameResponse(const StartGameResponse& response);
 	static std::vector<unsigned char> serializeGetRoomStateResponse(const GetRoomStateResponse& response);
