@@ -1,33 +1,70 @@
+
+//#pragma once
+//#include <WinSock2.h>
+//#pragma comment(lib, "Ws2_32.lib")
+//#include <map>
+//#include <mutex>
+//#include <thread>
+//#include "IRequestHandler.h"
+//#include "RequestHandlerFactory.h"
+//
+//#define SERVER_PORT 8826
+//
+//class Communicator
+//{
+//public:/*
+//<<<<<<< HEAD
+//	Communicator(RequestHandlerFactory* handlerFactory);
+//=======
+//	
+//	Communicator(RequestHandlerFactory& handlerFactory);
+//>>>>>>> origin/develop
+//	~Communicator();
+//
+//	void startHandleRequests();
+//
+//private:
+//	void bindAndListen();
+//	void handleNewClient(SOCKET clientSocket);
+//
+//	SOCKET m_serverSocket;
+//	std::map<SOCKET, IRequestHandler*> m_clients;
+//	RequestHandlerFactory& m_handlerFactory; 
+//	std::mutex m_clientsMutex;
+//<<<<<<< HEAD
+//	RequestHandlerFactory* m_handlerFactory;
+
+//	void bindAndListen();
+//	void handleNewClient(SOCKET clientSocket);
+//=======
+//>>>>>>> origin/develop
+//};
+
 #pragma once
-#pragma comment(lib, "ws2_32.lib")
-
 #include <WinSock2.h>
-#include <Windows.h>
+#pragma comment(lib, "Ws2_32.lib")
 #include <map>
-#include <string>
-#include <thread>
 #include <mutex>
-
+#include <thread>
 #include "IRequestHandler.h"
 #include "RequestHandlerFactory.h"
 
 #define SERVER_PORT 8826
-#define HELLO_LENGTH 5
 
 class Communicator
 {
 public:
-	Communicator(RequestHandlerFactory* handlerFactory);
+	Communicator(RequestHandlerFactory& handlerFactory);
 	~Communicator();
 
 	void startHandleRequests();
 
 private:
-	SOCKET m_serverSocket;
-	std::map<SOCKET, IRequestHandler*> m_clients;
-	std::mutex m_clientsMutex;
-	RequestHandlerFactory* m_handlerFactory;
-
 	void bindAndListen();
 	void handleNewClient(SOCKET clientSocket);
+
+	SOCKET m_serverSocket;
+	std::map<SOCKET, IRequestHandler*> m_clients;
+	RequestHandlerFactory& m_handlerFactory;
+	std::mutex m_clientsMutex;
 };

@@ -22,6 +22,7 @@ private:
 	StatisticsManager* m_statisticsManager;
 
 public:
+<<<<<<< HEAD
 	RequestHandlerFactory(SqliteDataBase* database,
 		LoginManager* loginManager,
 		RoomManager* roomManager,
@@ -35,4 +36,15 @@ public:
 
 	RoomManager* getRoomManager();
 	StatisticsManager* getStatisticsManager();
+=======
+	RequestHandlerFactory(SqliteDataBase* database);
+	~RequestHandlerFactory();
+
+	LoginRequestHandler* createLoginRequestHandler();
+
+private:
+	SqliteDataBase* m_database;
+	LoginManager* m_loginManager;
+	StatisticsManager* m_statisticsManager;
+>>>>>>> origin/develop
 };

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SqliteDataBase.h" 
+#include "RequestHandlerFactory.h"
 #include "Communicator.h"
 #include "RequestHandlerFactory.h"
 #include "LoginManager.h"
@@ -8,6 +10,7 @@
 
 class Server
 {
+<<<<<<< HEAD
 private:
 	RequestHandlerFactory* m_handlerFactory;
 	Communicator* m_communicator;
@@ -17,4 +20,16 @@ public:
 	~Server();
 
 	void run();
+=======
+public:
+	Server();
+	~Server();
+	void run();
+
+private:
+	SqliteDataBase* m_database;
+
+	RequestHandlerFactory m_handlerFactory;
+	Communicator m_communicator;
+>>>>>>> origin/develop
 };
