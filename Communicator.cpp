@@ -89,8 +89,13 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 {
 	try
 	{
+		std::cout << "Client connected and handshake done." << std::endl;
+
 		while (true)
 		{
+			//getting the first code, this is a char sended before len of payload
+			//after getting that you need to get len of payload and then by the len of the payload
+			//you are getting the payload you need
 			unsigned char header[5] = { 0 };
 
 			int bytesReceived = 0;
@@ -105,9 +110,11 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 			{
 				break;
 			}
+			std::cout << header << std::endl;
+			std::cout << header[0] << std::endl;
 
 			RequestInfo requestInfo;
-			requestInfo.messageCode = header[0];
+			requestInfo.messageCode = header[0]; 
 
 			unsigned int dataSize = 0;
 			dataSize |= (unsigned int)header[1] << 24;

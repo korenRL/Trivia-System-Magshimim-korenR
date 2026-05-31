@@ -1,13 +1,14 @@
+
 #include "Server.h"
 #include "SqliteDataBase.h" 
 #include <iostream>
+#include <exception>
 
 Server::Server()
 	: m_database(new SqliteDataBase("TriviaDB.sqlite")),
-	m_handlerFactory(m_database), 
-	m_communicator(m_handlerFactory) 
+	m_handlerFactory(m_database),
+	m_communicator(m_handlerFactory)
 {
-	
 }
 
 Server::~Server()

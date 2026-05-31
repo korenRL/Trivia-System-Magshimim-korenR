@@ -1,50 +1,83 @@
 
+
+
 #include "LoginRequestHandler.h"
 #include "RequestHandlerFactory.h"
 #include <iostream>
 
-LoginRequestHandler::LoginRequestHandler(LoginManager* loginManager) : m_loginManager(loginManager)
+LoginRequestHandler::LoginRequestHandler(LoginManager* loginManager, RequestHandlerFactory* handlerFactory)
+	: m_loginManager(loginManager), m_handlerFactory(handlerFactory)
 {
 }
 
 bool LoginRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
 {
-	if (requestInfo.messageCode == LOGIN_CODE || requestInfo.messageCode == SIGNUP_CODE)
-	{
-		return true;
-	}
-	return false;
+	return requestInfo.messageCode == LOGIN_CODE || requestInfo.messageCode == SIGNUP_CODE;
 }
 
 RequestResult LoginRequestHandler::handleRequest(const RequestInfo& requestInfo)
 {
 	RequestResult result;
-	result.newHandler = nullptr;
 
-	if (requestInfo.messageCode == LOGIN_CODE)
+	try
 	{
-		LoginRequest loginRequest = JsonRequestPacketDeserializer::deserializerLoginRequest(requestInfo);
-		int status = m_loginManager->login(loginRequest.username, loginRequest.password);
-
-		LoginResponse response;
-		response.status = (status == 1) ? 0 : 1;
-		result.response = JsonResponsePacketSerializer::serializeLoginResponse(response);
+		if (requestInfo.messageCode == LOGIN_CODE)
+		{
+			result = login(requestInfo);
+		}
+		else if (requestInfo.messageCode == SIGNUP_CODE)
+		{
+			result = signup(requestInfo);
+		}
+		else
+		{
+			ErrorResponse err{ "Invalid request" };
+			result.response = JsonResponsePacketSerializer::serializeErrorResponse(err);
+			result.newHandler = nullptr;
+		}
 	}
-	else if (requestInfo.messageCode == SIGNUP_CODE)
+	catch (const std::exception& e)
 	{
-		SignupRequest signupRequest = JsonRequestPacketDeserializer::deserializerSignUpRequest(requestInfo);
-		int status = m_loginManager->signup(signupRequest.username, signupRequest.password, signupRequest.email);
-
-		SignupResponse response;
-		response.status = (status == 1) ? 0 : 1;
-		result.response = JsonResponsePacketSerializer::serializeSignupResponse(response);
-	}
-	else
-	{
-		ErrorResponse err;
-		err.message = "Invalid request";
+		ErrorResponse err{ e.what() };
 		result.response = JsonResponsePacketSerializer::serializeErrorResponse(err);
+		result.newHandler = nullptr;
 	}
+
+	return result;
+}
+
+RequestResult LoginRequestHandler::login(const RequestInfo& requestInfo)
+{
+	RequestResult result;
+	LoginRequest loginRequest = JsonRequestPacketDeserializer::deserializerLoginRequest(requestInfo);
+
+	int status = m_loginManager->login(loginRequest.username, loginRequest.password);
+
+	LoginResponse response;
+	response.status = (status == 1) ? 0 : 1;
+
+	result.response = JsonResponsePacketSerializer::serializeLoginResponse(response);
+
+	if (status == 1)
+		result.newHandler = m_handlerFactory->createMenuRequestHandler(loginRequest.username);
+	else
+		result.newHandler = this;
+
+	return result;
+}
+
+RequestResult LoginRequestHandler::signup(const RequestInfo& requestInfo)
+{
+	RequestResult result;
+	SignupRequest signupRequest = JsonRequestPacketDeserializer::deserializerSignUpRequest(requestInfo);
+
+	int status = m_loginManager->signup(signupRequest.username, signupRequest.password, signupRequest.email);
+
+	SignupResponse response;
+	response.status = (status == 1) ? 0 : 1;
+
+	result.response = JsonResponsePacketSerializer::serializeSignupResponse(response);
+	result.newHandler = this;
 
 	return result;
 }

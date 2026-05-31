@@ -18,4 +18,6 @@ public:
 	static JoinRoomRequest deserializerJoinRoomRequest(const RequestInfo& info);
 	static GetPlayersInRoomRequest deserializerGetPlayersInRoomRequest(const RequestInfo& info);
 	static LeaveRoomRequest deserializerLeaveRoomRequest(const RequestInfo& info);
+
+	static SubmitAnswerRequest deserializerSubmitAnswerRequest(const RequestInfo& info);
 };
