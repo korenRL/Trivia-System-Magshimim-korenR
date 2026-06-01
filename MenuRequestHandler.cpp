@@ -45,7 +45,11 @@ RequestResult MenuRequestHandler::handleRequest(const RequestInfo& requestInfo)
     else if (requestInfo.messageCode == GET_ROOMS_CODE)
     {
         GetRoomsResponse res;
-        res.rooms = m_roomManager->getRooms();
+        auto rooms = m_roomManager->getRooms();
+        for (auto& r : rooms)
+        {
+            res.rooms.push_back(r.metadata);
+        }
         result.response = JsonResponsePacketSerializer::serializeGetRoomsResponse(res);
     }
     else if (requestInfo.messageCode == JOIN_ROOM_CODE)

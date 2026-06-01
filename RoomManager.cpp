@@ -2,18 +2,16 @@
 
 int RoomManager::createRoom(const std::string& name, unsigned int maxPlayers, unsigned int numQuestions, unsigned int timePerQuestion)
 {
-	Room room;
+	RoomData data;
+	data.id = m_nextRoomId++;
+	data.name = name;
+	data.maxPlayers = maxPlayers;
+	data.numOfQuestionsInGame = numQuestions;
+	data.timePerQuestion = timePerQuestion;
+	data.isActive = 0;
 
-	room.id = m_nextRoomId;
-	m_nextRoomId++;
-
-	room.name = name;
-	room.maxPlayers = maxPlayers;
-	room.numOfQuestions = numQuestions;
-	room.timePerQuestion = timePerQuestion;
-
-	m_rooms[room.id] = room;
-	return room.id;
+	m_rooms[data.id] = Room(data);
+	return data.id;
 }
 
 std::vector<Room> RoomManager::getRooms() const
@@ -34,7 +32,7 @@ bool RoomManager::joinRoom(unsigned int roomId, const std::string& username)
 	}
 
 	auto& room = m_rooms[roomId];
-	if (room.players.size() >= room.maxPlayers)
+	if (room.players.size() >= room.metadata.maxPlayers)
 	{
 		return false;
 	}
@@ -59,4 +57,46 @@ void RoomManager::leaveRoom(unsigned int roomId, const std::string& username)
 			break;
 		}
 	}
+}
+
+void Room::addUser(const std::string& username)
+{
+	players.push_back(username);
+}
+
+void Room::removeUser(const std::string& username)
+{
+	for (auto it = players.begin(); it != players.end(); ++it)
+	{
+		if (*it == username)
+		{
+			players.erase(it);
+			break;
+		}
+	}
+}
+
+std::vector<std::string> Room::getAllUsers() const
+{
+	return players;
+}
+
+void RoomManager::deleteRoom(unsigned int roomId)
+{
+	m_rooms.erase(roomId);
+}
+
+unsigned int RoomManager::getRoomState(unsigned int roomId) const
+{
+	if (m_rooms.find(roomId) == m_rooms.end())
+	{
+		return 0;
+	}
+
+	return m_rooms.at(roomId).metadata.isActive;
+}
+
+Room& RoomManager::getRoom(unsigned int roomId)
+{
+	return m_rooms[roomId];
 }
