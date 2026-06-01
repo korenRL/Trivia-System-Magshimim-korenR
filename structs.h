@@ -82,3 +82,10 @@ struct GetRoomStateResponse
     unsigned int answerTimeout;
 };
 
+
+struct Question
+{
+    std::string question;
+    std::vector<std::string> possibleAnswers;
+    unsigned int correctAnswerId;
+};
