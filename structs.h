@@ -41,7 +41,7 @@ struct SignupResponse {
 };
 
 struct GetRoomsResponse {
-    std::vector<Room> rooms;
+    std::vector<RoomData> rooms;
 };
 
 struct CreateRoomResponse {

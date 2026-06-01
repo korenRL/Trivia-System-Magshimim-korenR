@@ -47,7 +47,7 @@ std::vector<unsigned char> JsonResponsePacketSerializer::serializeGetRoomsRespon
 		r["id"] = room.id;
 		r["name"] = room.name;
 		r["maxPlayers"] = room.maxPlayers;
-		r["numOfQuestions"] = room.numOfQuestions;
+		r["numOfQuestions"] = room.numOfQuestionsInGame;
 		r["timePerQuestion"] = room.timePerQuestion;
 		j["rooms"].push_back(r);
 	}
@@ -78,11 +78,6 @@ std::vector<unsigned char> JsonResponsePacketSerializer::serializeLeaveRoomRespo
 	j["status"] = response.status;
 	return buildPacket(17, j.dump());
 }
-
-//Aтттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттттт
-
-
-
 
 std::vector<unsigned char> JsonResponsePacketSerializer::serializeCloseRoomResponse(const CloseRoomResponse& response) {
 	json j;
