@@ -35,6 +35,21 @@ SqliteDataBase::SqliteDataBase(const std::string& dbName)
 		std::cerr << "SQL error (statistics): " << errMsg << std::endl;
 		sqlite3_free(errMsg);
 	}
+
+	const char* sqlQuestions = "CREATE TABLE IF NOT EXISTS QUESTIONS ("
+		"id INTEGER PRIMARY KEY AUTOINCREMENT, "
+		"question TEXT NOT NULL, "
+		"correct_answer TEXT NOT NULL, "
+		"incorrect_answer_1 TEXT NOT NULL, "
+		"incorrect_answer_2 TEXT NOT NULL, "
+		"incorrect_answer_3 TEXT NOT NULL);";
+
+	res = sqlite3_exec(db, sqlQuestions, nullptr, nullptr, &errMsg);
+	if (res != SQLITE_OK)
+	{
+		std::cerr << "SQL error (questions): " << errMsg << std::endl;
+		sqlite3_free(errMsg);
+	}
 	else
 	{
 		std::cout << "Database opened and all tables are ready." << std::endl;
@@ -146,4 +161,41 @@ bool SqliteDataBase::isPasswordMatch(const std::string& username, const std::str
 	{
 		return false;
 	}
+}
+
+std::vector<Question> SqliteDataBase::getQuestions(int amount)
+{
+	std::vector<Question> questions;
+	if (!db)
+	{
+		return questions;
+	}
+
+	std::string sql = "SELECT question, correct_answer, incorrect_answer_1, incorrect_answer_2, incorrect_answer_3 FROM QUESTIONS ORDER BY RANDOM() LIMIT " + std::to_string(amount) + ";";
+
+	auto callback = [](void* data, int argc, char** argv, char** colName) -> int
+		{
+			if (argc >= 5)
+			{
+				Question q;
+				q.question = argv[0];
+				q.possibleAnswers.push_back(argv[1]);
+				q.possibleAnswers.push_back(argv[2]);
+				q.possibleAnswers.push_back(argv[3]);
+				q.possibleAnswers.push_back(argv[4]);
+				q.correctAnswerId = 0;
+				((std::vector<Question>*)data)->push_back(q);
+			}
+			return 0;
+		};
+
+	char* errMsg = nullptr;
+	int res = sqlite3_exec(db, sql.c_str(), callback, &questions, &errMsg);
+	if(res != SQLITE_OK)
+	{
+		std::cerr << "getQuestions error: " << errMsg << std::endl;
+		sqlite3_free(errMsg);
+	}
+
+	return questions;
 }
