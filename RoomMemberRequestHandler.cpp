@@ -1,6 +1,7 @@
 #include "RoomMemberRequestHandler.h"
 #include "RequestHandlerFactory.h"
 #include "JsonResponsePacketSerializer.h"
+#include "GameRequestHandler.h"
 #include "structs.h"
 
 RoomMemberRequestHandler::RoomMemberRequestHandler(Room room, LoggedUser user, RoomManager& roomManager, RequestHandlerFactory& handlerFactory)
@@ -30,28 +31,64 @@ RequestResult RoomMemberRequestHandler::handleRequest(const RequestInfo& request
 
 RequestResult RoomMemberRequestHandler::leaveRoom(const RequestInfo& requestInfo)
 {
+    m_roomManager.leaveRoom(m_room.metadata.id, m_user.username);
+
     LeaveRoomResponse res;
     res.status = 1;
 
     RequestResult result;
     result.response = JsonResponsePacketSerializer::serializeLeaveRoomResponse(res);
-    result.newHandler = nullptr; 
+    result.newHandler = m_handlerFactory.createMenuRequestHandler(m_user.username);
 
     return result;
 }
 
 RequestResult RoomMemberRequestHandler::getRoomState(const RequestInfo& requestInfo)
 {
-    GetRoomStateResponse res;
-    res.status = 1;
-    res.hasGameBegun = false;
-    res.players = {};
-    res.answerCount = 0;
-    res.answerTimeout = 10;
-
     RequestResult result;
+    GetRoomStateResponse res;
+
+    bool roomExists = false;
+    auto rooms = m_roomManager.getRooms();
+    for (auto& r : rooms)
+    {
+        if (r.metadata.id == m_room.metadata.id)
+        {
+            roomExists = true;
+            break;
+        }
+    }
+
+    if (!roomExists)
+    {
+        res.status = 0;
+        res.hasGameBegun = false;
+        res.players = {};
+        res.answerCount = 0;
+        res.answerTimeout = 0;
+
+        result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
+        result.newHandler = m_handlerFactory.createMenuRequestHandler(m_user.username);
+        return result;
+    }
+
+    Room& room = m_roomManager.getRoom(m_room.metadata.id);
+    res.status = 1;
+    res.hasGameBegun = room.metadata.isActive == 1;
+    res.players = room.getAllUsers();
+    res.answerCount = room.metadata.numOfQuestionsInGame;
+    res.answerTimeout = room.metadata.timePerQuestion;
+
     result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
-    result.newHandler = this;
+
+    if (room.metadata.isActive == 1)
+    {
+        result.newHandler = m_handlerFactory.createGameRequestHandler(m_user);
+    }
+    else
+    {
+        result.newHandler = this;
+    }
 
     return result;
 }

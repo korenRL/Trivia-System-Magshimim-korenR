@@ -3,12 +3,14 @@
 #include "SqliteDataBase.h" 
 #include <iostream>
 #include <exception>
+#include <ctime>
 
 Server::Server()
 	: m_database(new SqliteDataBase("TriviaDB.sqlite")),
 	m_handlerFactory(m_database),
 	m_communicator(m_handlerFactory)
 {
+	srand((unsigned int)time(NULL));
 }
 
 Server::~Server()

@@ -30,5 +30,10 @@ namespace TriviaClient
         {
             MainWindow.Instance.NavigateToCreateRoom();
         }
+
+        private void JoinRoom_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow.Instance.NavigateToJoinRoom();
+        }
     }
 }

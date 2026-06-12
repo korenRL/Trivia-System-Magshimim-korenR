@@ -15,19 +15,21 @@ namespace TriviaClient
         {
             try
             {
+                int answerCooldown = int.Parse(TimePerQuestionBox.Text);
+
                 var res = NetworkClient.Send(NetworkClient.CREATE_ROOM_CODE, new
                 {
                     roomName = RoomNameBox.Text,
-                    MaxPlayersBox = int.Parse(MaxPlayersBox.Text),
+                    maxPlayers = int.Parse(MaxPlayersBox.Text),
                     questionCount = int.Parse(QuestionsCountBox.Text),
-                    answerCooldown = int.Parse(TimePerQuestionBox.Text)
+                    answerCooldown = answerCooldown
                 });
 
                 int status = res.Data["status"].GetInt32();
 
                 if (status == 1)
                 {
-                    MainWindow.Instance.NavigateToMenu();
+                    NavigationService.Navigate(new Lobby(true, answerCooldown));
                 }
                 else
                 {

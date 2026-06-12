@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 #include "RoomManager.h"
+#include <utility>
+#include <ctime>
+#include <map>
 
 enum ResponseCode : unsigned char {
     ERROR_RES = 10,
@@ -14,7 +17,13 @@ enum ResponseCode : unsigned char {
     LEAVE_ROM_RES = 17,
     CLOSE_ROOM_RES = 18,
     START_GAME_RES = 19,
-    GET_ROOM_STATE_RES = 20
+    GET_ROOM_STATE_RES = 20,
+    HIGH_SCORES_RES = 25,
+    PERSONAL_STATS_RES = 26,
+    LEAVE_GAME_RES = 35,
+    GET_QUESTION_RES = 36,
+    SUBMIT_ANSWER_RES = 37,
+    GET_GAME_RESULTS_RES = 38
 };
 
 enum RequestCode : unsigned char {
@@ -88,4 +97,60 @@ struct Question
     std::string question;
     std::vector<std::string> possibleAnswers;
     unsigned int correctAnswerId;
+};
+
+struct PlayerStatistics
+{
+    unsigned int gamesPlayed;
+    unsigned int correctAnswers;
+    unsigned int wrongAnswers;
+    float avgAnswerTime;
+};
+
+struct GameData
+{
+    Question currentQuestion;
+    unsigned int correctAnswerCount;
+    unsigned int wrongAnswerCount;
+    float averageAnswerTime;
+    unsigned int questionIndex;
+    time_t lastQuestionTime;
+    bool statsSaved;
+};
+
+struct StatisticsResponse
+{
+    std::vector<std::string> statistics;
+};
+
+struct PlayerResults
+{
+    std::string username;
+    unsigned int correctAnswerCount;
+    unsigned int wrongAnswerCount;
+    float averageAnswerTime;
+};
+
+struct GetQuestionResponse
+{
+    unsigned int status;
+    std::string question;
+    std::map<unsigned int, std::string> answers;
+};
+
+struct SubmitAnswerResponse
+{
+    unsigned int status;
+    unsigned int correctAnswerId;
+};
+
+struct GetGameResultsResponse
+{
+    unsigned int status;
+    std::vector<PlayerResults> results;
+};
+
+struct LeaveGameResponse
+{
+    unsigned int status;
 };

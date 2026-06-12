@@ -1,95 +1,29 @@
 #include "GameManager.h"
-#include <iostream>
 
 GameManager::GameManager(SqliteDataBase* db) : m_database(db)
 {
 }
 
-void GameManager::startGame(const Room& room)
+Game& GameManager::createGame(const Room& room)
 {
-	m_questions = m_database->getQuestions(10);
-	m_players.clear();
-
-	for (const auto& username : room.players)
-	{
-		GameData data;
-		data.correctAnswerCount = 0;
-		data.wrongAnswerCount = 0;
-		data.averageAnswerTime = 0;
-
-		if (!m_questions.empty())
-		{
-			data.currentQuestion = m_questions[0];
-		}
-
-		m_players[username] = data;
-	}
+	std::vector<Question> questions = m_database->getQuestions(room.metadata.numOfQuestionsInGame);
+	m_games.push_back(Game(room, questions, m_database));
+	return m_games.back();
 }
 
-Question GameManager::getQuestionForUser(const std::string& username)
+Game& GameManager::getGame()
 {
-	if (m_players.find(username) == m_players.end())
-	{
-		return Question{};
-	}
-
-	return m_players[username].currentQuestion;
+	return m_games.back();
 }
 
-bool GameManager::submitAnswer(const std::string& username, unsigned int answerId, time_t answerTime)
+void GameManager::deleteGame(unsigned int gameId)
 {
-	int i = 0;
-
-	if (m_players.find(username) == m_players.end())
+	for (auto it = m_games.begin(); it != m_games.end(); ++it)
 	{
-		return false;
-	}
-
-	GameData& data = m_players[username];
-	bool correct = (answerId == data.currentQuestion.correctAnswerId);
-
-	if (correct)
-	{
-		data.correctAnswerCount++;
-	}
-	else
-	{
-		data.wrongAnswerCount++;
-	}
-
-	unsigned int totalAnswers = data.correctAnswerCount + data.wrongAnswerCount;
-	data.averageAnswerTime = ((data.averageAnswerTime * (totalAnswers - 1)) + (unsigned int)answerTime / totalAnswers);
-
-	for (i = 0; i < m_questions.size(); i++)
-	{
-		if (m_questions[i].question == data.currentQuestion.question)
+		if (it->getGameId() == gameId)
 		{
-			if (i + 1 < m_questions.size())
-			{
-				data.currentQuestion = m_questions[i + 1];
-			}
-
-			break;
+			m_games.erase(it);
+			return;
 		}
 	}
-
-	return correct;
-}
-
-std::map<std::string, GameData> GameManager::getResults() const
-{
-	return m_players;
-}
-
-void GameManager::removePlayer(const std::string& username)
-{
-	if (m_players.find(username) != m_players.end())
-	{
-		m_players.erase(username);
-	}
-}
-
-bool GameManager::isGameOver() const
-{
-	return m_players.empty();
 }

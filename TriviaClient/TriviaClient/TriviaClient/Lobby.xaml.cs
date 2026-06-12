@@ -12,9 +12,21 @@ namespace TriviaClient
     {
         private bool _keepRefreshing = true;
 
-        public Lobby()
+        private bool _isAdmin;
+        private int _answerTimeout = 10;
+
+        public Lobby(bool isAdmin = false, int answerTimeout = 10)
         {
             InitializeComponent();
+            _isAdmin = isAdmin;
+            _answerTimeout = answerTimeout;
+
+            if (_isAdmin)
+            {
+                LeaveButton.Visibility = Visibility.Collapsed;
+                StartGameButton.Visibility = Visibility.Visible;
+                CloseRoomButton.Visibility = Visibility.Visible;
+            }
 
             Thread refreshThread = new Thread(RefreshPlayersLoop);
             refreshThread.IsBackground = true;
@@ -31,8 +43,33 @@ namespace TriviaClient
                 {
                     ServerResponse response = NetworkClient.Send(NetworkClient.GET_ROOM_STATE_REQ, new { });
 
+                    if (response.Data != null && response.Data.ContainsKey("answerTimeOut"))
+                    {
+                        _answerTimeout = response.Data["answerTimeOut"].GetInt32();
+                    }
+
+                    if (response.Data != null && response.Data.ContainsKey("hasGameBegun") && response.Data["hasGameBegun"].GetBoolean())
+                    {
+                        _keepRefreshing = false;
+                        Dispatcher.Invoke(() =>
+                        {
+                            NavigationService.Navigate(new GameScreen(_answerTimeout));
+                        });
+                        return;
+                    }
+
                     if (response.Data != null && (response.Data.ContainsKey("players") || response.Data.ContainsKey("Players")))
                     {
+                        if (response.Data != null && response.Data.ContainsKey("status") && response.Data["status"].GetInt32() == 0)
+                        {
+                            _keepRefreshing = false;
+                            Dispatcher.Invoke(() =>
+                            {
+                                NavigationService.Navigate(new MenuPage());
+                            });
+                            return;
+                        }
+
                         string key = response.Data.ContainsKey("players") ? "players" : "Players";
                         string playersJson = response.Data[key].GetRawText();
 
@@ -69,6 +106,36 @@ namespace TriviaClient
             catch (Exception)
             {
                 StatusText.Text = "Error leaving room.";
+            }
+        }
+
+        private void CloseRoom_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                ServerResponse response = NetworkClient.Send(NetworkClient.CLOSE_ROOM_REQ, new { });
+
+                _keepRefreshing = false;
+                NavigationService.Navigate(new MenuPage());
+            }
+            catch (Exception)
+            {
+                StatusText.Text = "Error closing room.";
+            }
+        }
+
+        private void StartGame_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _keepRefreshing = false;
+                ServerResponse response = NetworkClient.Send(NetworkClient.START_GAME_REQ, new { });
+
+                NavigationService.Navigate(new GameScreen(_answerTimeout));
+            }
+            catch (Exception)
+            {
+                StatusText.Text = "Error starting game.";
             }
         }
     }

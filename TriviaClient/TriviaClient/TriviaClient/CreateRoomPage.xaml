@@ -10,7 +10,7 @@
         <TextBox x:Name="RoomNameBox" Margin="0,0,0,10"/>
 
         <TextBlock Text="Max Players"/>
-        <TextBlock x:Name="MaxPlayersBox" Margin="0,0,0,10"/>
+        <TextBox x:Name="MaxPlayersBox" Margin="0,0,0,10"/>
 
         <TextBlock Text="Number of Questions"/>
         <TextBox x:Name="QuestionsCountBox" Margin="0,0,0,10"/>
