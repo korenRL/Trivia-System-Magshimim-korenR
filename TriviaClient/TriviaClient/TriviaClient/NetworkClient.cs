@@ -35,6 +35,7 @@ namespace TriviaClient
         public const int LEAVE_ROOM_REQ = 24;
         public const int GET_QUESTION_REQ = 32;
         public const int SUBMIT_ANSWER_REQ = 33;
+        public const int GET_GAME_RESULT_REQ = 34;
         public static void ConnectNew()
         {
             Close();

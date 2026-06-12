@@ -62,7 +62,7 @@ namespace TriviaClient
                 }
                 else
                 {
-                    NavigationService.Navigate(new HighScoresPage());
+                    NavigationService.Navigate(new AfterGamePage());
                 }
             }
             catch (Exception)
