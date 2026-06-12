@@ -22,10 +22,19 @@ namespace TriviaClient
 
         public const int LOGIN_CODE = 1;
         public const int SIGNUP_CODE = 2;
-        public const int HIGH_SCORE_CODE = 8;
-        public const int PERSONAL_STATS_CODE = 9;
         public const int CREATE_ROOM_CODE = 3;
 
+        public const int GET_ROOMS_CODE = 4;
+        public const int JOIN_ROOM_CODE = 5;
+
+        public const int LEAVE_ROOM_CODE = 6; 
+
+        public const int HIGH_SCORE_CODE = 8;
+        public const int PERSONAL_STATS_CODE = 9;
+        public const int GET_ROOM_STATE_REQ = 23;
+        public const int LEAVE_ROOM_REQ = 24;
+        public const int GET_QUESTION_REQ = 32;
+        public const int SUBMIT_ANSWER_REQ = 33;
         public static void ConnectNew()
         {
             Close();
