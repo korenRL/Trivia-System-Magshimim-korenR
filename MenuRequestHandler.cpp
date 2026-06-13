@@ -24,6 +24,7 @@ bool MenuRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
         requestInfo.messageCode == GET_ROOMS_CODE ||
         requestInfo.messageCode == JOIN_ROOM_CODE ||
         requestInfo.messageCode == LEAVE_ROOM_CODE ||
+        requestInfo.messageCode == LOGOUT_CODE ||
         requestInfo.messageCode == HIGH_SCORE_CODE ||
         requestInfo.messageCode == PERSONAL_STATS_CODE;
 }
@@ -90,6 +91,16 @@ RequestResult MenuRequestHandler::handleRequest(const RequestInfo& requestInfo)
         res.status = 1;
 
         result.response = JsonResponsePacketSerializer::serializeLeaveRoomResponse(res);
+    }
+    else if (requestInfo.messageCode == LOGOUT_CODE)
+    {
+        m_loginManager->logout(m_username);
+
+        LeaveRoomResponse res;
+        res.status = 1;
+
+        result.response = JsonResponsePacketSerializer::serializeLeaveRoomResponse(res);
+        result.newHandler = m_handlerFactory->createLoginRequestHandler();
     }
     else if (requestInfo.messageCode == HIGH_SCORE_CODE)
     {

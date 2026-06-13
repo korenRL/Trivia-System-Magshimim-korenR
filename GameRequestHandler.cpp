@@ -123,6 +123,11 @@ RequestResult GameRequestHandler::leaveGame(const RequestInfo& requestInfo)
 {
     m_game.removePlayer(m_user.username);
 
+    if (m_game.isFinished())
+    {
+        m_handlerFactory.getRoomManager()->deleteRoom(m_game.getGameId());
+    }
+
     LeaveGameResponse res;
     res.status = 1;
 

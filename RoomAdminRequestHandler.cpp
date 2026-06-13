@@ -59,7 +59,7 @@ RequestResult RoomAdminRequestHandler::startGame(const RequestInfo& requestInfo)
 
     RequestResult result;
     result.response = JsonResponsePacketSerializer::serializeStartGameResponse(res);
-    result.newHandler = m_handlerFactory.createGameRequestHandler(m_user);
+    result.newHandler = m_handlerFactory.createGameRequestHandler(m_user, room.metadata.id);
 
     return result;
 }

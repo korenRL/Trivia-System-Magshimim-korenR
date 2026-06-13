@@ -77,9 +77,9 @@ StatisticsManager* RequestHandlerFactory::getStatisticsManager()
 	return m_statisticsManager;
 }
 
-GameRequestHandler* RequestHandlerFactory::createGameRequestHandler(LoggedUser user)
+GameRequestHandler* RequestHandlerFactory::createGameRequestHandler(LoggedUser user, unsigned int gameId)
 {
-	return new GameRequestHandler(m_gameManager->getGame(), user, *m_gameManager, *this);
+	return new GameRequestHandler(m_gameManager->getGame(gameId), user, *m_gameManager, *this);
 }
 
 GameManager* RequestHandlerFactory::getGameManager()

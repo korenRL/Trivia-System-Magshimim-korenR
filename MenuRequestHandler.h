@@ -14,6 +14,7 @@
 #define GET_ROOMS_CODE 4
 #define JOIN_ROOM_CODE 5
 #define LEAVE_ROOM_CODE 6
+#define LOGOUT_CODE 7
 #define HIGH_SCORE_CODE 8
 #define PERSONAL_STATS_CODE 9
 

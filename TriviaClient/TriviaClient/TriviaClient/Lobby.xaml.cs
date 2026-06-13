@@ -43,42 +43,53 @@ namespace TriviaClient
                 {
                     ServerResponse response = NetworkClient.Send(NetworkClient.GET_ROOM_STATE_REQ, new { });
 
-                    if (response.Data != null && response.Data.ContainsKey("answerTimeOut"))
+                    if (response.Data != null)
                     {
-                        _answerTimeout = response.Data["answerTimeOut"].GetInt32();
-                    }
-
-                    if (response.Data != null && response.Data.ContainsKey("hasGameBegun") && response.Data["hasGameBegun"].GetBoolean())
-                    {
-                        _keepRefreshing = false;
-                        Dispatcher.Invoke(() =>
+                        if (response.Data.ContainsKey("answerTimeOut"))
                         {
-                            NavigationService.Navigate(new GameScreen(_answerTimeout));
-                        });
-                        return;
-                    }
+                            _answerTimeout = response.Data["answerTimeOut"].GetInt32();
+                        }
+                        else if (response.Data.ContainsKey("answerTimeout"))
+                        {
+                            _answerTimeout = response.Data["answerTimeout"].GetInt32();
+                        }
 
-                    if (response.Data != null && (response.Data.ContainsKey("players") || response.Data.ContainsKey("Players")))
-                    {
-                        if (response.Data != null && response.Data.ContainsKey("status") && response.Data["status"].GetInt32() == 0)
+                        if (response.Data.ContainsKey("status") && response.Data["status"].GetInt32() == 0)
                         {
                             _keepRefreshing = false;
+
                             Dispatcher.Invoke(() =>
                             {
                                 NavigationService.Navigate(new MenuPage());
                             });
+
                             return;
                         }
 
-                        string key = response.Data.ContainsKey("players") ? "players" : "Players";
-                        string playersJson = response.Data[key].GetRawText();
-
-                        List<string> players = JsonSerializer.Deserialize<List<string>>(playersJson);
-
-                        Dispatcher.Invoke(() =>
+                        if (response.Data.ContainsKey("hasGameBegun") && response.Data["hasGameBegun"].GetBoolean())
                         {
-                            PlayersList.ItemsSource = players;
-                        });
+                            _keepRefreshing = false;
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                NavigationService.Navigate(new GameScreen(_answerTimeout));
+                            });
+
+                            return;
+                        }
+
+                        if (response.Data.ContainsKey("players") || response.Data.ContainsKey("Players"))
+                        {
+                            string key = response.Data.ContainsKey("players") ? "players" : "Players";
+                            string playersJson = response.Data[key].GetRawText();
+
+                            List<string> players = JsonSerializer.Deserialize<List<string>>(playersJson);
+
+                            Dispatcher.Invoke(() =>
+                            {
+                                PlayersList.ItemsSource = players;
+                            });
+                        }
                     }
                 }
                 catch (Exception)
@@ -128,10 +139,19 @@ namespace TriviaClient
         {
             try
             {
-                _keepRefreshing = false;
                 ServerResponse response = NetworkClient.Send(NetworkClient.START_GAME_REQ, new { });
 
-                NavigationService.Navigate(new GameScreen(_answerTimeout));
+                if (response.Data != null &&
+                    response.Data.ContainsKey("status") &&
+                    response.Data["status"].GetInt32() == 1)
+                {
+                    _keepRefreshing = false;
+                    NavigationService.Navigate(new GameScreen(_answerTimeout));
+                }
+                else
+                {
+                    StatusText.Text = "Error starting game.";
+                }
             }
             catch (Exception)
             {

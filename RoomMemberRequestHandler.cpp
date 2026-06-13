@@ -45,50 +45,40 @@ RequestResult RoomMemberRequestHandler::leaveRoom(const RequestInfo& requestInfo
 
 RequestResult RoomMemberRequestHandler::getRoomState(const RequestInfo& requestInfo)
 {
-    RequestResult result;
-    GetRoomStateResponse res;
+	RequestResult result;
+	GetRoomStateResponse res;
 
-    bool roomExists = false;
-    auto rooms = m_roomManager.getRooms();
-    for (auto& r : rooms)
-    {
-        if (r.metadata.id == m_room.metadata.id)
-        {
-            roomExists = true;
-            break;
-        }
-    }
+	if (!m_roomManager.roomExists(m_room.metadata.id))
+	{
+		res.status = 0;
+		res.hasGameBegun = false;
+		res.players = {};
+		res.answerCount = 0;
+		res.answerTimeout = 0;
 
-    if (!roomExists)
-    {
-        res.status = 0;
-        res.hasGameBegun = false;
-        res.players = {};
-        res.answerCount = 0;
-        res.answerTimeout = 0;
+		result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
+		result.newHandler = m_handlerFactory.createMenuRequestHandler(m_user.username);
+		return result;
+	}
 
-        result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
-        result.newHandler = m_handlerFactory.createMenuRequestHandler(m_user.username);
-        return result;
-    }
+	Room& room = m_roomManager.getRoom(m_room.metadata.id);
 
-    Room& room = m_roomManager.getRoom(m_room.metadata.id);
-    res.status = 1;
-    res.hasGameBegun = room.metadata.isActive == 1;
-    res.players = room.getAllUsers();
-    res.answerCount = room.metadata.numOfQuestionsInGame;
-    res.answerTimeout = room.metadata.timePerQuestion;
+	res.status = 1;
+	res.hasGameBegun = room.metadata.isActive == 1;
+	res.players = room.getAllUsers();
+	res.answerCount = room.metadata.numOfQuestionsInGame;
+	res.answerTimeout = room.metadata.timePerQuestion;
 
-    result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
+	result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
 
-    if (room.metadata.isActive == 1)
-    {
-        result.newHandler = m_handlerFactory.createGameRequestHandler(m_user);
-    }
-    else
-    {
-        result.newHandler = this;
-    }
+	if (room.metadata.isActive == 1)
+	{
+		result.newHandler = m_handlerFactory.createGameRequestHandler(m_user, room.metadata.id);
+	}
+	else
+	{
+		result.newHandler = this;
+	}
 
-    return result;
+	return result;
 }

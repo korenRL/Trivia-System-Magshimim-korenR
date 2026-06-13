@@ -26,6 +26,7 @@ public:
 	void addUser(const std::string& username);
 	void removeUser(const std::string& username);
 	std::vector<std::string> getAllUsers() const;
+
 };
 
 class RoomManager
@@ -44,4 +45,5 @@ public:
 	void deleteRoom(unsigned int roomId);
 	unsigned int getRoomState(unsigned int roomId) const;
 	Room& getRoom(unsigned int roomId);
+	bool roomExists(unsigned int roomId) const;
 };

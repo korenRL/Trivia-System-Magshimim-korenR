@@ -33,7 +33,7 @@ public:
 	IRequestHandler* createMenuRequestHandler(const std::string& username);
 	RoomAdminRequestHandler* createRoomAdminRequestHandler(LoggedUser user, Room room);
 	RoomMemberRequestHandler* createRoomMemberRequestHandler(LoggedUser user, Room room);
-	GameRequestHandler* createGameRequestHandler(LoggedUser user);
+	GameRequestHandler* createGameRequestHandler(LoggedUser user, unsigned int gameId);
 	GameManager* getGameManager();
 
 	RoomManager* getRoomManager();

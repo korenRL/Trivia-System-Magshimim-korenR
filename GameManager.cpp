@@ -27,3 +27,16 @@ void GameManager::deleteGame(unsigned int gameId)
 		}
 	}
 }
+
+Game& GameManager::getGame(unsigned int gameId)
+{
+	for (auto& game : m_games)
+	{
+		if (game.getGameId() == gameId)
+		{
+			return game;
+		}
+	}
+
+	throw std::runtime_error("Game not found");
+}

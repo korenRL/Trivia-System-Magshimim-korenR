@@ -28,7 +28,8 @@ namespace TriviaClient
         public const int GET_ROOMS_CODE = 4;
         public const int JOIN_ROOM_CODE = 5;
 
-        public const int LEAVE_ROOM_CODE = 6; 
+        public const int LEAVE_ROOM_CODE = 6;
+        public const int LOGOUT_CODE = 7;
 
 
         public const int HIGH_SCORE_CODE = 8;

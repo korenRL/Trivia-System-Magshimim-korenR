@@ -16,5 +16,6 @@ public:
 
 	Game& createGame(const Room& room);
 	Game& getGame();
+	Game& getGame(unsigned int gameId);
 	void deleteGame(unsigned int gameId);
 };
