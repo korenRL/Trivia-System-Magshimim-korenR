@@ -20,10 +20,19 @@ private:
 
 public:
 	Game() = default;
-	Game(const Room& room, std::vector<Question> questions, SqliteDataBase* db);
+	Game(
+		const Room& room, 
+		std::vector<Question> questions, 
+		SqliteDataBase* db
+	);
+
+	unsigned int submitAnswer(
+		const std::string& username,
+		unsigned int answerId,
+		time_t answerTime
+	);
 
 	Question getQuestionForUser(const std::string& username);
-	unsigned int submitAnswer(const std::string& username, unsigned int answerId, time_t answerTime);
 	void removePlayer(const std::string& username);
 	std::map<std::string, GameData> getResults() const;
 	unsigned int getGameId() const;

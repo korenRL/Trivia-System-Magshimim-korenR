@@ -10,12 +10,16 @@ LoginRequestHandler::LoginRequestHandler(LoginManager* loginManager, RequestHand
 {
 }
 
-bool LoginRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool LoginRequestHandler::isRequestRelevant(
+	const RequestInfo& requestInfo
+) const
 {
 	return requestInfo.messageCode == LOGIN_CODE || requestInfo.messageCode == SIGNUP_CODE;
 }
 
-RequestResult LoginRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult LoginRequestHandler::handleRequest(
+	const RequestInfo& requestInfo
+)
 {
 	RequestResult result;
 

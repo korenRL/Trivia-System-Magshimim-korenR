@@ -24,6 +24,11 @@ private:
 public:
 	LoginRequestHandler(LoginManager* loginManager, RequestHandlerFactory* handlerFactory);
 
-	virtual bool isRequestRelevant(const RequestInfo& requestInfo) override;
-	virtual RequestResult handleRequest(const RequestInfo& requestInfo) override;
+	virtual bool isRequestRelevant(
+		const RequestInfo& requestInfo
+	) const override;
+
+	virtual RequestResult handleRequest(
+		const RequestInfo& requestInfo
+	) override;
 };

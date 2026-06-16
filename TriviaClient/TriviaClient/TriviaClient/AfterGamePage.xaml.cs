@@ -33,6 +33,7 @@ namespace TriviaClient
             LoadResults();
         }
 
+        // Checks until all players have finished and results are ready to go.
         private void ResultsTimer_Tick(object sender, EventArgs e)
         {
             if (!_gotResults)

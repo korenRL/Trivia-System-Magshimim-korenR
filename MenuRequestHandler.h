@@ -30,12 +30,19 @@ private:
 	RequestHandlerFactory* m_handlerFactory;
 
 public:
-	MenuRequestHandler(LoginManager* loginManager,
+	MenuRequestHandler(
+		LoginManager* loginManager,
 		RoomManager* roomManager,
 		StatisticsManager* statisticsManager,
 		const std::string& username,
-		RequestHandlerFactory* handlerFactory);
+		RequestHandlerFactory* handlerFactory
+	);
 
-	virtual bool isRequestRelevant(const RequestInfo& requestInfo) override;
-	virtual RequestResult handleRequest(const RequestInfo& requestInfo) override;
+	virtual bool isRequestRelevant(
+		const RequestInfo& requestInfo
+	) const override;
+
+	virtual RequestResult handleRequest(
+		const RequestInfo& requestInfo
+	) override;
 };

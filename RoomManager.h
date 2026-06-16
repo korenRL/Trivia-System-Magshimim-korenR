@@ -38,7 +38,13 @@ private:
 public:
 	RoomManager() = default;
 
-	int createRoom(const std::string& name, unsigned int maxPlayers, unsigned int numQuestions, unsigned int timePerQuestion);
+	int createRoom(
+		const std::string& name,
+		unsigned int maxPlayers,
+		unsigned int numQuestions, 
+		unsigned int timePerQuestion
+	);
+
 	std::vector<Room> getRooms() const;
 	bool joinRoom(unsigned int roomId, const std::string& username);
 	void leaveRoom(unsigned int roomId, const std::string& username);

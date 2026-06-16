@@ -11,6 +11,7 @@ SqliteDataBase::SqliteDataBase(const std::string& dbName)
 		db = nullptr;
 		return;
 	}
+	sqlite3_busy_timeout(db, 5000);
 
 	const char* sqlUsers = "CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL, email TEXT NOT NULL);";
 
@@ -280,7 +281,14 @@ std::vector<std::pair<std::string, PlayerStatistics>> SqliteDataBase::getAllStat
 	return results;
 }
 
-int SqliteDataBase::submitGameStatistics(const std::string& username, const GameData& data)
+/*
+* Updates total statistics,
+* The mutex prevents two game threads from writing together.
+*/
+int SqliteDataBase::submitGameStatistics(
+	const std::string& username, 
+	const GameData& data
+)
 {
 	std::lock_guard<std::mutex> lock(m_dbMutex);
 
@@ -301,14 +309,26 @@ int SqliteDataBase::submitGameStatistics(const std::string& username, const Game
 
 	unsigned int answersInGame = data.correctAnswerCount + data.wrongAnswerCount;
 
+	std::string correctAnswers =
+		std::to_string(data.correctAnswerCount);
+
+	std::string avgTime =
+		std::to_string(data.averageAnswerTime);
+
+	std::string answers =
+		std::to_string(answersInGame);
+
 	std::string updateSql = "UPDATE statistics SET "
 		"games_played = games_played + 1, "
-		"total_correct_answers = total_correct_answers + " + std::to_string(data.correctAnswerCount) + ", "
+		"total_correct_answers = total_correct_answers + " +
+		correctAnswers + ", "
 		"average_answer_time = CASE "
-		"WHEN total_answers + " + std::to_string(answersInGame) + " = 0 THEN 0 "
-		"ELSE ((average_answer_time * total_answers) + (" + std::to_string(data.averageAnswerTime) + " * " + std::to_string(answersInGame) + ")) / (total_answers + " + std::to_string(answersInGame) + ") "
+		"WHEN total_answers + " + answers + " = 0 THEN 0 "
+		"ELSE ((average_answer_time * total_answers) + (" +
+		avgTime + " * " + answers + ")) / "
+		"(total_answers + " + answers + ") "
 		"END, "
-		"total_answers = total_answers + " + std::to_string(answersInGame) + " "
+		"total_answers = total_answers + " + answers + " "
 		"WHERE username = '" + username + "';";
 
 	res = sqlite3_exec(db, updateSql.c_str(), nullptr, nullptr, &errMsg);

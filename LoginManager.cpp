@@ -8,7 +8,6 @@ LoginManager::LoginManager(SqliteDataBase* db)
 {
 }
 
-// Helper function from your branch
 bool LoginManager::isUserLoggedIn(const std::string& username)
 {
   
@@ -22,7 +21,7 @@ bool LoginManager::isUserLoggedIn(const std::string& username)
     return false;
 }
 
-// Helper function from develop branch
+// Basic validation ebfore cheking the database.
 static bool isValidUsername(const std::string& username)
 {
     if (username.empty())
@@ -44,7 +43,6 @@ int LoginManager::login(const std::string& username, const std::string& password
         return 0;
     }
 
-    // Critical: Lock before accessing database and logged users list
     std::lock_guard<std::mutex> lock(m_usersMutex);
 
     if (!m_database->isUserExist(username))
@@ -82,7 +80,6 @@ int LoginManager::signup(const std::string& username, const std::string& passwor
         return 0;
     }
 
-    // Critical: Lock before modifying database
     std::lock_guard<std::mutex> lock(m_usersMutex);
 
     if (m_database->isUserExist(username))
@@ -101,7 +98,6 @@ int LoginManager::signup(const std::string& username, const std::string& passwor
     return 1;
 }
 
-// Logout function from develop branch
 void LoginManager::logout(const std::string& username)
 {
     std::lock_guard<std::mutex> lock(m_usersMutex);

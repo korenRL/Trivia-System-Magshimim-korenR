@@ -9,13 +9,21 @@ RoomMemberRequestHandler::RoomMemberRequestHandler(Room room, LoggedUser user, R
 {
 }
 
-bool RoomMemberRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool RoomMemberRequestHandler::isRequestRelevant(
+	const RequestInfo& requestInfo
+) const
 {
     return requestInfo.messageCode == RequestCode::LEAVE_ROOM_REQ ||
         requestInfo.messageCode == RequestCode::GET_ROOM_STATE_REQ;
 }
 
-RequestResult RoomMemberRequestHandler::handleRequest(const RequestInfo& requestInfo)
+/*
+* If the room becomes active, the handler changes to game mode.
+* If the room was closed by the admin, the member returns to the menu.
+*/
+RequestResult RoomMemberRequestHandler::handleRequest(
+	const RequestInfo& requestInfo
+)
 {
     if (requestInfo.messageCode == RequestCode::LEAVE_ROOM_REQ)
     {
@@ -73,7 +81,11 @@ RequestResult RoomMemberRequestHandler::getRoomState(const RequestInfo& requestI
 
 	if (room.metadata.isActive == 1)
 	{
-		result.newHandler = m_handlerFactory.createGameRequestHandler(m_user, room.metadata.id);
+		result.newHandler = 
+			m_handlerFactory.createGameRequestHandler(
+				m_user, 
+				room.metadata.id
+			);
 	}
 	else
 	{

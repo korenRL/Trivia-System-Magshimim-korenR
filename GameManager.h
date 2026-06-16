@@ -15,7 +15,7 @@ public:
 	GameManager(SqliteDataBase* db);
 
 	Game& createGame(const Room& room);
-	Game& getGame();
+	Game& getLastGame();
 	Game& getGame(unsigned int gameId);
 	void deleteGame(unsigned int gameId);
 };

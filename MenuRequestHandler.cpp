@@ -18,7 +18,9 @@ MenuRequestHandler::MenuRequestHandler(LoginManager* loginManager,
 {
 }
 
-bool MenuRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool MenuRequestHandler::isRequestRelevant(
+    const RequestInfo& requestInfo
+) const
 {
     return requestInfo.messageCode == CREATE_ROOM_CODE ||
         requestInfo.messageCode == GET_ROOMS_CODE ||
@@ -29,7 +31,9 @@ bool MenuRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
         requestInfo.messageCode == PERSONAL_STATS_CODE;
 }
 
-RequestResult MenuRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult MenuRequestHandler::handleRequest(
+    const RequestInfo& requestInfo
+)
 {
     RequestResult result;
     result.newHandler = nullptr;

@@ -35,6 +35,10 @@ namespace TriviaClient
             this.Unloaded += Page_Unloaded;
         }
 
+        /*
+         * The lobby checks the server until the admin starts the game
+         * or closes the room.
+        */
         private void RefreshPlayersLoop()
         {
             while (_keepRefreshing)
@@ -100,6 +104,10 @@ namespace TriviaClient
             }
         }
 
+        /*
+         * If the page closes before the player finished, it should notify
+         * the server so other players will not wait forever.
+        */
         private void Page_Unloaded(object sender, RoutedEventArgs e)
         {
             _keepRefreshing = false;

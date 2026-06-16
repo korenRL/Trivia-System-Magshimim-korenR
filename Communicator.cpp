@@ -93,9 +93,7 @@ void Communicator::handleNewClient(SOCKET clientSocket)
 
 		while (true)
 		{
-			//getting the first code, this is a char sended before len of payload
-			//after getting that you need to get len of payload and then by the len of the payload
-			//you are getting the payload you need
+			// Read the packet haeader: request code + payLoad Len.
 			unsigned char header[5] = { 0 };
 
 			int bytesReceived = 0;

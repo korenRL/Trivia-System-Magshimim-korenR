@@ -6,12 +6,13 @@ GameManager::GameManager(SqliteDataBase* db) : m_database(db)
 
 Game& GameManager::createGame(const Room& room)
 {
-	std::vector<Question> questions = m_database->getQuestions(room.metadata.numOfQuestionsInGame);
+	std::vector<Question> questions = 
+		m_database->getQuestions(room.metadata.numOfQuestionsInGame);
 	m_games.push_back(Game(room, questions, m_database));
 	return m_games.back();
 }
 
-Game& GameManager::getGame()
+Game& GameManager::getLastGame()
 {
 	return m_games.back();
 }
@@ -28,6 +29,10 @@ void GameManager::deleteGame(unsigned int gameId)
 	}
 }
 
+/*
+* Finds the game that belongs to the room that started it,
+* this prevents players form joining the wrong actiive game.
+*/
 Game& GameManager::getGame(unsigned int gameId)
 {
 	for (auto& game : m_games)

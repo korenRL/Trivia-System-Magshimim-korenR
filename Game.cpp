@@ -1,7 +1,13 @@
 #include "Game.h"
 
-Game::Game(const Room& room, std::vector<Question> questions, SqliteDataBase* db)
-	: m_questions(questions), m_gameId(room.metadata.id), m_database(db)
+Game::Game(
+	const Room& room,
+	std::vector<Question> questions, 
+	SqliteDataBase* db
+) 
+	: m_questions(questions),
+	m_gameId(room.metadata.id),
+	m_database(db)
 {
 	for (const auto& username : room.players)
 	{
@@ -86,7 +92,9 @@ unsigned int Game::submitAnswer(const std::string& username, unsigned int answer
 	}
 
 	unsigned int totalAnswers = data.correctAnswerCount + data.wrongAnswerCount;
-	data.averageAnswerTime = ((data.averageAnswerTime * (totalAnswers - 1)) + elapsed) / totalAnswers;
+	data.averageAnswerTime = 
+		((data.averageAnswerTime * (totalAnswers - 1)) + elapsed) /
+		totalAnswers;
 
 	data.questionIndex++;
 
@@ -107,6 +115,10 @@ void Game::submitGameStatsToDB(const std::string& username, const GameData& data
 	}
 }
 
+/*
+* If a player leaves in the middle of the game he still appears in
+* the final results. The remaining questions are counted as wrong ones.
+*/
 void Game::removePlayer(const std::string& username)
 {
 	if (m_players.find(username) == m_players.end())

@@ -17,11 +17,22 @@ private:
     RequestHandlerFactory& m_handlerFactory;
 
 public:
-    GameRequestHandler(Game& game, LoggedUser user, GameManager& gameManager, RequestHandlerFactory& handlerFactory);
+    GameRequestHandler(
+        Game& game,
+        LoggedUser user,
+        GameManager& gameManager,
+        RequestHandlerFactory& handlerFactory
+    );
+
     ~GameRequestHandler();
 
-    virtual bool isRequestRelevant(const RequestInfo& requestInfo) override;
-    virtual RequestResult handleRequest(const RequestInfo& requestInfo) override;
+    virtual bool isRequestRelevant(
+        const RequestInfo& requestInfo
+    ) const override;
+
+    virtual RequestResult handleRequest(
+        const RequestInfo& requestInfo
+    ) override;
 
 private:
     RequestResult getQuestion(const RequestInfo& requestInfo);

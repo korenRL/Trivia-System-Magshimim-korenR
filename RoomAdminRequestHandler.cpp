@@ -4,19 +4,31 @@
 #include "GameRequestHandler.h"
 #include "structs.h"
 
-RoomAdminRequestHandler::RoomAdminRequestHandler(Room room, LoggedUser user, RoomManager& roomManager, RequestHandlerFactory& handlerFactory)
-    : m_room(room), m_user(user), m_roomManager(roomManager), m_handlerFactory(handlerFactory)
+RoomAdminRequestHandler::RoomAdminRequestHandler(
+    Room room,
+    LoggedUser user, 
+    RoomManager& roomManager, 
+    RequestHandlerFactory& handlerFactory
+) 
+    : m_room(room),
+    m_user(user),
+    m_roomManager(roomManager), 
+    m_handlerFactory(handlerFactory)
 {
 }
 
-bool RoomAdminRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool RoomAdminRequestHandler::isRequestRelevant(
+    const RequestInfo& requestInfo
+) const
 {
     return requestInfo.messageCode == RequestCode::CLOSE_ROOM_REQ ||
         requestInfo.messageCode == RequestCode::START_GAME_REQ ||
         requestInfo.messageCode == RequestCode::GET_ROOM_STATE_REQ;
 }
 
-RequestResult RoomAdminRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult RoomAdminRequestHandler::handleRequest(
+    const RequestInfo& requestInfo
+)
 {
     if (requestInfo.messageCode == RequestCode::CLOSE_ROOM_REQ)
     {
@@ -48,6 +60,11 @@ RequestResult RoomAdminRequestHandler::closeRoom(const RequestInfo& requestInfo)
     return result;
 }
 
+/*
+* The game is created before the room becomes active.
+* This prevents members from entering gmaem ode before the
+* game obj exists.
+*/
 RequestResult RoomAdminRequestHandler::startGame(const RequestInfo& requestInfo)
 {
     Room& room = m_roomManager.getRoom(m_room.metadata.id);
@@ -59,7 +76,11 @@ RequestResult RoomAdminRequestHandler::startGame(const RequestInfo& requestInfo)
 
     RequestResult result;
     result.response = JsonResponsePacketSerializer::serializeStartGameResponse(res);
-    result.newHandler = m_handlerFactory.createGameRequestHandler(m_user, room.metadata.id);
+    result.newHandler = 
+        m_handlerFactory.createGameRequestHandler(
+            m_user, 
+            room.metadata.id
+        );
 
     return result;
 }

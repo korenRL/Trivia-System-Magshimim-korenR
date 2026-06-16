@@ -4,17 +4,31 @@
 #include "JsonResponsePacketSerializer.h"
 #include "structs.h"
 
-GameRequestHandler::GameRequestHandler(Game& game, LoggedUser user, GameManager& gameManager, RequestHandlerFactory& handlerFactory)
-    : m_game(game), m_user(user), m_gameManager(gameManager), m_handlerFactory(handlerFactory)
+GameRequestHandler::GameRequestHandler(
+    Game& game,
+    LoggedUser user,
+    GameManager& gameManager,
+    RequestHandlerFactory& handlerFactory
+)
+    : m_game(game),
+    m_user(user),
+    m_gameManager(gameManager),
+    m_handlerFactory(handlerFactory)
 {
 }
 
+/*
+* If the client closes the window during a game, the handler is
+* destroyed. (Meant that he left the game)
+*/
 GameRequestHandler::~GameRequestHandler()
 {
     m_game.removePlayer(m_user.username);
 }
 
-bool GameRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool GameRequestHandler::isRequestRelevant(
+    const RequestInfo& requestInfo
+) const
 {
     return requestInfo.messageCode == RequestCode::LEAVE_GAME_REQ ||
         requestInfo.messageCode == RequestCode::GET_QUESTION_REQ ||
@@ -22,7 +36,9 @@ bool GameRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
         requestInfo.messageCode == RequestCode::GET_GAME_RESULT_REQ;
 }
 
-RequestResult GameRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult GameRequestHandler::handleRequest(
+    const RequestInfo& requestInfo
+)
 {
     if (requestInfo.messageCode == RequestCode::GET_QUESTION_REQ)
     {
@@ -73,9 +89,16 @@ RequestResult GameRequestHandler::getQuestion(const RequestInfo& requestInfo)
 
 RequestResult GameRequestHandler::submitAnswer(const RequestInfo& requestInfo)
 {
-    SubmitAnswerRequest req = JsonRequestPacketDeserializer::deserializerSubmitAnswerRequest(requestInfo);
+    SubmitAnswerRequest req =
+        JsonRequestPacketDeserializer::deserializerSubmitAnswerRequest(
+            requestInfo
+        );
 
-    unsigned int correctId = m_game.submitAnswer(m_user.username, req.answerId, requestInfo.receivalTime);
+    unsigned int correctId = m_game.submitAnswer(
+            m_user.username, 
+            req.answerId, 
+            requestInfo.receivalTime
+        );
 
     SubmitAnswerResponse res;
     res.status = correctId == 0 ? 0 : 1;
@@ -88,6 +111,10 @@ RequestResult GameRequestHandler::submitAnswer(const RequestInfo& requestInfo)
     return result;
 }
 
+/* 
+* Results are returned only after all players finished.
+* Until then, the client keeps showing the waiting screen.
+*/
 RequestResult GameRequestHandler::getGameResults(const RequestInfo& requestInfo)
 {
     GetGameResultsResponse res;

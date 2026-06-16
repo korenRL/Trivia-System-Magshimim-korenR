@@ -13,12 +13,25 @@ public:
 	SqliteDataBase(const std::string& dbName);
 	~SqliteDataBase();
 
-	bool addUser(const std::string& username, const std::string& password, const std::string& email);
+	bool addUser(
+		const std::string& username,
+		const std::string& password, 
+		const std::string& email
+	);
 
 	bool isUserExist(const std::string& username);
-	bool isPasswordMatch(const std::string& username, const std::string& password);
+
+	bool isPasswordMatch(
+		const std::string& username,
+		const std::string& password
+	);
+
 	std::vector<Question> getQuestions(int amount);
-	PlayerStatistics getPlayerStatistics(const std::string& username);
+
+	PlayerStatistics getPlayerStatistics(
+		const std::string& username
+	);
+
 	std::vector<std::pair<std::string, PlayerStatistics>> getAllStatistics();
 	int submitGameStatistics(const std::string& username, const GameData& data);
 
