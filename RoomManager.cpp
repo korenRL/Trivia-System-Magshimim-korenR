@@ -1,6 +1,11 @@
 #include "RoomManager.h"
 
-int RoomManager::createRoom(const std::string& name, unsigned int maxPlayers, unsigned int numQuestions, unsigned int timePerQuestion)
+int RoomManager::createRoom(
+	const std::string& name,
+	unsigned int maxPlayers, 
+	unsigned int numQuestions,
+	unsigned int timePerQuestion
+)
 {
 	RoomData data;
 	data.id = m_nextRoomId++;
@@ -14,13 +19,19 @@ int RoomManager::createRoom(const std::string& name, unsigned int maxPlayers, un
 	return data.id;
 }
 
+// Only waiting rooms are shown in the 'join room' screen
 std::vector<Room> RoomManager::getRooms() const
 {
 	std::vector<Room> rooms;
+
 	for (const auto& pair : m_rooms)
 	{
-		rooms.push_back(pair.second);
+		if (pair.second.metadata.isActive == 0)
+		{
+			rooms.push_back(pair.second);
+		}
 	}
+
 	return rooms;
 }
 
@@ -32,6 +43,12 @@ bool RoomManager::joinRoom(unsigned int roomId, const std::string& username)
 	}
 
 	auto& room = m_rooms[roomId];
+
+	if (room.metadata.isActive == 1)
+	{
+		return false;
+	}
+
 	if (room.players.size() >= room.metadata.maxPlayers)
 	{
 		return false;
@@ -99,4 +116,13 @@ unsigned int RoomManager::getRoomState(unsigned int roomId) const
 Room& RoomManager::getRoom(unsigned int roomId)
 {
 	return m_rooms[roomId];
+}
+
+/*
+* Used by members already inside a room, even after the
+* room becomes active and is hidden from the public list.
+*/
+bool RoomManager::roomExists(unsigned int roomId) const
+{
+	return m_rooms.find(roomId) != m_rooms.end();
 }

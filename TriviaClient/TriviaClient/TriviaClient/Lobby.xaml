@@ -16,8 +16,12 @@
 
             <ListBox x:Name="PlayersList" Height="200" Margin="0,0,0,15" Background="#f9f9f9" BorderBrush="LightGray" FontSize="16" />
 
-            <Button Content="Leave Room" Height="36" Margin="0,0,0,10" Click="Leave_Click" Background="#f0f0f0" Foreground="Red" FontWeight="Bold"/>
-
+            <Button x:Name="LeaveButton" Content="Leave Room" Height="36" Margin="0,0,0,10" Click="Leave_Click" Background="#f0f0f0" Foreground="Red" FontWeight="Bold"/>
+            
+            <Button x:Name="StartGameButton" Content="Start Game" Height="36" Margin="0,0,0,10" Click="StartGame_Click" Background="#f0f0f0" FontWeight="Bold" Visibility="Collapsed"/>
+            
+            <Button x:Name="CloseRoomButton" Content="Close Room" Height="36" Margin="0,0,0,10" Click="CloseRoom_Click" Background="#f0f0f0" Foreground="Red" FontWeight="Bold" Visibility="Collapsed"/>
+            
             <TextBlock x:Name="StatusText" Margin="0,20,0,0" Foreground="Red" FontWeight="Bold"/>
         </StackPanel>
     </Grid>

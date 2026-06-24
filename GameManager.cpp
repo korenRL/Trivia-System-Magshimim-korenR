@@ -1,95 +1,47 @@
 #include "GameManager.h"
-#include <iostream>
 
 GameManager::GameManager(SqliteDataBase* db) : m_database(db)
 {
 }
 
-void GameManager::startGame(const Room& room)
+Game& GameManager::createGame(const Room& room)
 {
-	m_questions = m_database->getQuestions(10);
-	m_players.clear();
+	std::vector<Question> questions = 
+		m_database->getQuestions(room.metadata.numOfQuestionsInGame);
+	m_games.push_back(Game(room, questions, m_database));
+	return m_games.back();
+}
 
-	for (const auto& username : room.players)
+Game& GameManager::getLastGame()
+{
+	return m_games.back();
+}
+
+void GameManager::deleteGame(unsigned int gameId)
+{
+	for (auto it = m_games.begin(); it != m_games.end(); ++it)
 	{
-		GameData data;
-		data.correctAnswerCount = 0;
-		data.wrongAnswerCount = 0;
-		data.averageAnswerTime = 0;
-
-		if (!m_questions.empty())
+		if (it->getGameId() == gameId)
 		{
-			data.currentQuestion = m_questions[0];
+			m_games.erase(it);
+			return;
 		}
-
-		m_players[username] = data;
 	}
 }
 
-Question GameManager::getQuestionForUser(const std::string& username)
+/*
+* Finds the game that belongs to the room that started it,
+* this prevents players form joining the wrong actiive game.
+*/
+Game& GameManager::getGame(unsigned int gameId)
 {
-	if (m_players.find(username) == m_players.end())
+	for (auto& game : m_games)
 	{
-		return Question{};
-	}
-
-	return m_players[username].currentQuestion;
-}
-
-bool GameManager::submitAnswer(const std::string& username, unsigned int answerId, time_t answerTime)
-{
-	int i = 0;
-
-	if (m_players.find(username) == m_players.end())
-	{
-		return false;
-	}
-
-	GameData& data = m_players[username];
-	bool correct = (answerId == data.currentQuestion.correctAnswerId);
-
-	if (correct)
-	{
-		data.correctAnswerCount++;
-	}
-	else
-	{
-		data.wrongAnswerCount++;
-	}
-
-	unsigned int totalAnswers = data.correctAnswerCount + data.wrongAnswerCount;
-	data.averageAnswerTime = ((data.averageAnswerTime * (totalAnswers - 1)) + (unsigned int)answerTime / totalAnswers);
-
-	for (i = 0; i < m_questions.size(); i++)
-	{
-		if (m_questions[i].question == data.currentQuestion.question)
+		if (game.getGameId() == gameId)
 		{
-			if (i + 1 < m_questions.size())
-			{
-				data.currentQuestion = m_questions[i + 1];
-			}
-
-			break;
+			return game;
 		}
 	}
 
-	return correct;
-}
-
-std::map<std::string, GameData> GameManager::getResults() const
-{
-	return m_players;
-}
-
-void GameManager::removePlayer(const std::string& username)
-{
-	if (m_players.find(username) != m_players.end())
-	{
-		m_players.erase(username);
-	}
-}
-
-bool GameManager::isGameOver() const
-{
-	return m_players.empty();
+	throw std::runtime_error("Game not found");
 }

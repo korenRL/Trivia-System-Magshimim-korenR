@@ -1,5 +1,6 @@
 #include "SqliteDataBase.h"
 #include <iostream>
+#include <cstdlib>
 
 SqliteDataBase::SqliteDataBase(const std::string& dbName)
 {
@@ -10,6 +11,7 @@ SqliteDataBase::SqliteDataBase(const std::string& dbName)
 		db = nullptr;
 		return;
 	}
+	sqlite3_busy_timeout(db, 5000);
 
 	const char* sqlUsers = "CREATE TABLE IF NOT EXISTS users (username TEXT PRIMARY KEY, password TEXT NOT NULL, email TEXT NOT NULL);";
 
@@ -184,6 +186,13 @@ std::vector<Question> SqliteDataBase::getQuestions(int amount)
 				q.possibleAnswers.push_back(argv[3]);
 				q.possibleAnswers.push_back(argv[4]);
 				q.correctAnswerId = 0;
+
+				int swapIndex = rand() % 4;
+				std::string tmp = q.possibleAnswers[0];
+				q.possibleAnswers[0] = q.possibleAnswers[swapIndex];
+				q.possibleAnswers[swapIndex] = tmp;
+				q.correctAnswerId = swapIndex;
+
 				((std::vector<Question>*)data)->push_back(q);
 			}
 			return 0;
@@ -198,4 +207,137 @@ std::vector<Question> SqliteDataBase::getQuestions(int amount)
 	}
 
 	return questions;
+}
+
+PlayerStatistics SqliteDataBase::getPlayerStatistics(const std::string& username)
+{
+	PlayerStatistics stats{ 0, 0, 0, 0.0f };
+	if (!db)
+	{
+		return stats;
+	}
+
+	std::string sql = "SELECT games_played, total_correct_answers, total_answers, average_answer_time FROM statistics WHERE username = '" + username + "';";
+	auto callback = [](void* data, int argc, char** argv, char** colName) -> int
+		{
+			if (argc >= 4 && argv[0] && argv[1] && argv[2] && argv[3])
+			{
+				PlayerStatistics* s = (PlayerStatistics*)data;
+				s->gamesPlayed = std::stoi(argv[0]);
+				s->correctAnswers = std::stoi(argv[1]);
+				unsigned int totalAnswers = std::stoi(argv[2]);
+				s->wrongAnswers = totalAnswers - s->correctAnswers;
+				s->avgAnswerTime = std::stof(argv[3]);
+			}
+			return 0;
+		};
+
+	char* errMsg = nullptr;
+	int res = sqlite3_exec(db, sql.c_str(), callback, &stats, &errMsg);
+	if (res != SQLITE_OK)
+	{
+		std::cerr << "getPlayerStatistics error: " << errMsg << std::endl;
+		sqlite3_free(errMsg);
+	}
+
+	return stats;
+}
+
+std::vector<std::pair<std::string, PlayerStatistics>> SqliteDataBase::getAllStatistics()
+{
+	std::vector<std::pair<std::string, PlayerStatistics>> results;
+	if (!db)
+	{
+		return results;
+	}
+
+	std::string sql = "SELECT username, games_played, total_correct_answers, total_answers, average_answer_time FROM statistics ORDER BY total_correct_answers DESC;";
+
+	auto callback = [](void* data, int argc, char** argv, char** colName) -> int
+		{
+			if (argc >= 5 && argv[0] && argv[1] && argv[2] && argv[3] && argv[4])
+			{
+				PlayerStatistics s;
+				s.gamesPlayed = std::stoi(argv[1]);
+				s.correctAnswers = std::stoi(argv[2]);
+				unsigned int totalAnswers = std::stoi(argv[3]);
+				s.wrongAnswers = totalAnswers - s.correctAnswers;
+				s.avgAnswerTime = std::stof(argv[4]);
+
+				auto* vec = (std::vector<std::pair<std::string, PlayerStatistics>>*)data;
+				vec->push_back({ argv[0], s });
+			}
+			return 0;
+		};
+
+	char* errMsg = nullptr;
+	int res = sqlite3_exec(db, sql.c_str(), callback, &results, &errMsg);
+	if (res != SQLITE_OK)
+	{
+		std::cerr << "getAllStatistics error: " << errMsg << std::endl;
+		sqlite3_free(errMsg);
+	}
+
+	return results;
+}
+
+/*
+* Updates total statistics,
+* The mutex prevents two game threads from writing together.
+*/
+int SqliteDataBase::submitGameStatistics(
+	const std::string& username, 
+	const GameData& data
+)
+{
+	std::lock_guard<std::mutex> lock(m_dbMutex);
+
+	if (!db)
+	{
+		return 0;
+	}
+
+	std::string insertSql = "INSERT OR IGNORE INTO statistics (username) VALUES ('" + username + "');";
+	char* errMsg = nullptr;
+	int res = sqlite3_exec(db, insertSql.c_str(), nullptr, nullptr, &errMsg);
+	if (res != SQLITE_OK)
+	{
+		std::cerr << "submitGameStatistics insert error: " << errMsg << std::endl;
+		sqlite3_free(errMsg);
+		return 0;
+	}
+
+	unsigned int answersInGame = data.correctAnswerCount + data.wrongAnswerCount;
+
+	std::string correctAnswers =
+		std::to_string(data.correctAnswerCount);
+
+	std::string avgTime =
+		std::to_string(data.averageAnswerTime);
+
+	std::string answers =
+		std::to_string(answersInGame);
+
+	std::string updateSql = "UPDATE statistics SET "
+		"games_played = games_played + 1, "
+		"total_correct_answers = total_correct_answers + " +
+		correctAnswers + ", "
+		"average_answer_time = CASE "
+		"WHEN total_answers + " + answers + " = 0 THEN 0 "
+		"ELSE ((average_answer_time * total_answers) + (" +
+		avgTime + " * " + answers + ")) / "
+		"(total_answers + " + answers + ") "
+		"END, "
+		"total_answers = total_answers + " + answers + " "
+		"WHERE username = '" + username + "';";
+
+	res = sqlite3_exec(db, updateSql.c_str(), nullptr, nullptr, &errMsg);
+	if (res != SQLITE_OK)
+	{
+		std::cerr << "submitGameStatistics update error: " << errMsg << std::endl;
+		sqlite3_free(errMsg);
+		return 0;
+	}
+
+	return 1;
 }

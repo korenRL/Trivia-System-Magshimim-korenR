@@ -12,16 +12,16 @@ namespace TriviaClient
         private DispatcherTimer _timer;
         private int _timeLeft;
         private int _correctAnswers;
+        private int _timePerQuestion;
 
-        public GameScreen()
+        public GameScreen(int timePerQuestion = 10)
         {
             InitializeComponent();
             _correctAnswers = 0;
-
+            _timePerQuestion = timePerQuestion;
             _timer = new DispatcherTimer();
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += Timer_Tick;
-
             GetNextQuestion();
         }
 
@@ -29,11 +29,10 @@ namespace TriviaClient
         {
             _timeLeft--;
             TimeLeftText.Text = $"Time: {_timeLeft}s";
-
             if (_timeLeft <= 0)
             {
                 _timer.Stop();
-                SubmitAnswer("");
+                SubmitAnswer(4);
             }
         }
 
@@ -43,26 +42,34 @@ namespace TriviaClient
             {
                 ServerResponse response = NetworkClient.Send(NetworkClient.GET_QUESTION_REQ, new { });
 
+                if (response.Data != null && response.Data.ContainsKey("status") && response.Data["status"].GetInt32() == 0)
+                {
+                    MainWindow.Instance.NavigateToAfterGame();
+                    return;
+                }
+
                 if (response.Data != null && response.Data.ContainsKey("question"))
                 {
-                    string questionStr = response.Data["question"].GetString();
+                    QuestionText.Text = response.Data["question"].GetString();
 
-                    var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                    List<string> answers = JsonSerializer.Deserialize<List<string>>(response.Data["answers"].GetRawText(), options);
+                    string[] answers = new string[4];
+                    foreach (var prop in response.Data["answers"].EnumerateObject())
+                    {
+                        int index = int.Parse(prop.Name);
+                        if (index >= 0 && index < 4)
+                        {
+                            answers[index] = prop.Value.GetString();
+                        }
+                    }
 
-                    QuestionText.Text = questionStr;
-                    Answer1.Content = answers.Count > 0 ? answers[0] : "";
-                    Answer2.Content = answers.Count > 1 ? answers[1] : "";
-                    Answer3.Content = answers.Count > 2 ? answers[2] : "";
-                    Answer4.Content = answers.Count > 3 ? answers[3] : "";
+                    Answer1.Content = answers[0];
+                    Answer2.Content = answers[1];
+                    Answer3.Content = answers[2];
+                    Answer4.Content = answers[3];
 
-                    _timeLeft = 10;
+                    _timeLeft = _timePerQuestion;
                     TimeLeftText.Text = $"Time: {_timeLeft}s";
                     _timer.Start();
-                }
-                else
-                {
-                    NavigationService.Navigate(new HighScoresPage());
                 }
             }
             catch (Exception)
@@ -73,20 +80,38 @@ namespace TriviaClient
         private void Answer_Click(object sender, RoutedEventArgs e)
         {
             _timer.Stop();
-            Button clickedButton = sender as Button;
-            SubmitAnswer(clickedButton.Content.ToString());
+
+            int answerId = 0;
+            if (sender == Answer2)
+            {
+                answerId = 1;
+            }
+            else if (sender == Answer3)
+            {
+                answerId = 2;
+            }
+            else if (sender == Answer4)
+            {
+                answerId = 3;
+            }
+
+            SubmitAnswer(answerId);
         }
 
-        private void SubmitAnswer(string answerText)
+        private void SubmitAnswer(int answerId)
         {
             try
             {
-                ServerResponse response = NetworkClient.Send(NetworkClient.SUBMIT_ANSWER_REQ, new { answer = answerText });
+                ServerResponse response = NetworkClient.Send(NetworkClient.SUBMIT_ANSWER_REQ, new { answerId = answerId });
 
                 if (response.Data != null && response.Data.ContainsKey("correctAnswerId"))
                 {
-                    _correctAnswers++;
-                    CorrectAnswersText.Text = $"Correct: {_correctAnswers}";
+                    int correctId = response.Data["correctAnswerId"].GetInt32();
+                    if (correctId == answerId)
+                    {
+                        _correctAnswers++;
+                        CorrectAnswersText.Text = $"Correct: {_correctAnswers}";
+                    }
                 }
 
                 GetNextQuestion();

@@ -100,3 +100,62 @@ std::vector<unsigned char> JsonResponsePacketSerializer::serializeGetRoomStateRe
 	j["answerTimeOut"] = response.answerTimeout;
 	return buildPacket(20, j.dump());
 }
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeHighScoreResponse(const StatisticsResponse& response)
+{
+	json j;
+	j["statistics"] = response.statistics;
+	return buildPacket(25, j.dump());
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializePersonalStatsResponse(const StatisticsResponse& response)
+{
+	json j;
+	j["statistics"] = response.statistics;
+	return buildPacket(26, j.dump());
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeGetQuestionResponse(const GetQuestionResponse& response)
+{
+	json j;
+	j["status"] = response.status;
+	j["question"] = response.question;
+	j["answers"] = json::object();
+	for (const auto& pair : response.answers)
+	{
+		j["answers"][std::to_string(pair.first)] = pair.second;
+	}
+	return buildPacket(GET_QUESTION_RES, j.dump());
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeSubmitAnswerResponse(const SubmitAnswerResponse& response)
+{
+	json j;
+	j["status"] = response.status;
+	j["correctAnswerId"] = response.correctAnswerId;
+	return buildPacket(SUBMIT_ANSWER_RES, j.dump());
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeGetGameResultsResponse(const GetGameResultsResponse& response)
+{
+	json j;
+	j["status"] = response.status;
+	j["results"] = json::array();
+	for (const auto& player : response.results)
+	{
+		json p;
+		p["username"] = player.username;
+		p["correctAnswerCount"] = player.correctAnswerCount;
+		p["wrongAnswerCount"] = player.wrongAnswerCount;
+		p["averageAnswerTime"] = player.averageAnswerTime;
+		j["results"].push_back(p);
+	}
+	return buildPacket(GET_GAME_RESULTS_RES, j.dump());
+}
+
+std::vector<unsigned char> JsonResponsePacketSerializer::serializeLeaveGameResponse(const LeaveGameResponse& response)
+{
+	json j;
+	j["status"] = response.status;
+	return buildPacket(LEAVE_GAME_RES, j.dump());
+}

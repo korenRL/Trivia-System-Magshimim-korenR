@@ -10,12 +10,16 @@ LoginRequestHandler::LoginRequestHandler(LoginManager* loginManager, RequestHand
 {
 }
 
-bool LoginRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool LoginRequestHandler::isRequestRelevant(
+	const RequestInfo& requestInfo
+) const
 {
 	return requestInfo.messageCode == LOGIN_CODE || requestInfo.messageCode == SIGNUP_CODE;
 }
 
-RequestResult LoginRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult LoginRequestHandler::handleRequest(
+	const RequestInfo& requestInfo
+)
 {
 	RequestResult result;
 
@@ -54,7 +58,7 @@ RequestResult LoginRequestHandler::login(const RequestInfo& requestInfo)
 	int status = m_loginManager->login(loginRequest.username, loginRequest.password);
 
 	LoginResponse response;
-	response.status = (status == 1) ? 0 : 1;
+	response.status = status;
 
 	result.response = JsonResponsePacketSerializer::serializeLoginResponse(response);
 
@@ -74,7 +78,7 @@ RequestResult LoginRequestHandler::signup(const RequestInfo& requestInfo)
 	int status = m_loginManager->signup(signupRequest.username, signupRequest.password, signupRequest.email);
 
 	SignupResponse response;
-	response.status = (status == 1) ? 0 : 1;
+	response.status = status;
 
 	result.response = JsonResponsePacketSerializer::serializeSignupResponse(response);
 	result.newHandler = this;

@@ -43,6 +43,16 @@ namespace TriviaClient
             MainFrame.Navigate(new CreateRoomPage());
         }
 
+        public void NavigateToJoinRoom()
+        {
+            MainFrame.Navigate(new JoinRoom());
+        }
+
+        public void NavigateToAfterGame()
+        {
+            MainFrame.Navigate(new AfterGamePage());
+        }
+
         private void MainFrame_Navigated(object sender, System.Windows.Navigation.NavigationEventArgs e)
         {
 
