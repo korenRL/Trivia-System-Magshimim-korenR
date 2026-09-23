@@ -22,6 +22,14 @@ namespace TriviaClient
 
         private void Logout_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                NetworkClient.Send(NetworkClient.LOGOUT_CODE, new { });
+            }
+            catch
+            {
+            }
+
             NetworkClient.Close();
             MainWindow.Instance.NavigateToLogin();
         }
@@ -29,6 +37,11 @@ namespace TriviaClient
         private void CreateRoom_Click(object sender, RoutedEventArgs e)
         {
             MainWindow.Instance.NavigateToCreateRoom();
+        }
+
+        private void JoinRoom_Click(object sender, RoutedEventArgs e)
+        {
+            MainWindow.Instance.NavigateToJoinRoom();
         }
     }
 }

@@ -1,27 +1,39 @@
 #include "MenuRequestHandler.h"
+#include "RequestHandlerFactory.h"
+#include "RoomAdminRequestHandler.h"
+#include "RoomMemberRequestHandler.h"
 #include "structs.h"
 #include <iostream>
 
 MenuRequestHandler::MenuRequestHandler(LoginManager* loginManager,
     RoomManager* roomManager,
     StatisticsManager* statisticsManager,
-    const std::string& username)
+    const std::string& username,
+    RequestHandlerFactory* handlerFactory)
     : m_loginManager(loginManager),
     m_roomManager(roomManager),
     m_statisticsManager(statisticsManager),
-    m_username(username)
+    m_username(username),
+    m_handlerFactory(handlerFactory)
 {
 }
 
-bool MenuRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool MenuRequestHandler::isRequestRelevant(
+    const RequestInfo& requestInfo
+) const
 {
     return requestInfo.messageCode == CREATE_ROOM_CODE ||
         requestInfo.messageCode == GET_ROOMS_CODE ||
         requestInfo.messageCode == JOIN_ROOM_CODE ||
-        requestInfo.messageCode == LEAVE_ROOM_CODE;
+        requestInfo.messageCode == LEAVE_ROOM_CODE ||
+        requestInfo.messageCode == LOGOUT_CODE ||
+        requestInfo.messageCode == HIGH_SCORE_CODE ||
+        requestInfo.messageCode == PERSONAL_STATS_CODE;
 }
 
-RequestResult MenuRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult MenuRequestHandler::handleRequest(
+    const RequestInfo& requestInfo
+)
 {
     RequestResult result;
     result.newHandler = nullptr;
@@ -41,6 +53,10 @@ RequestResult MenuRequestHandler::handleRequest(const RequestInfo& requestInfo)
         res.roomId = roomId;
 
         result.response = JsonResponsePacketSerializer::serializeCreateRoomResponse(res);
+
+        m_roomManager->joinRoom(roomId, m_username);
+        Room& room = m_roomManager->getRoom(roomId);
+        result.newHandler = m_handlerFactory->createRoomAdminRequestHandler(LoggedUser(m_username), room);
     }
     else if (requestInfo.messageCode == GET_ROOMS_CODE)
     {
@@ -62,6 +78,12 @@ RequestResult MenuRequestHandler::handleRequest(const RequestInfo& requestInfo)
         res.status = success ? 1 : 0;
 
         result.response = JsonResponsePacketSerializer::serializeJoinRoomResponse(res);
+
+        if (success)
+        {
+            Room& room = m_roomManager->getRoom(req.roomId);
+            result.newHandler = m_handlerFactory->createRoomMemberRequestHandler(LoggedUser(m_username), room);
+        }
     }
     else if (requestInfo.messageCode == LEAVE_ROOM_CODE)
     {
@@ -74,8 +96,32 @@ RequestResult MenuRequestHandler::handleRequest(const RequestInfo& requestInfo)
 
         result.response = JsonResponsePacketSerializer::serializeLeaveRoomResponse(res);
     }
+    else if (requestInfo.messageCode == LOGOUT_CODE)
+    {
+        m_loginManager->logout(m_username);
 
-    std::cout << "MenuRequestHandler got request code: " << requestInfo.messageCode << std::endl;
+        LeaveRoomResponse res;
+        res.status = 1;
+
+        result.response = JsonResponsePacketSerializer::serializeLeaveRoomResponse(res);
+        result.newHandler = m_handlerFactory->createLoginRequestHandler();
+    }
+    else if (requestInfo.messageCode == HIGH_SCORE_CODE)
+    {
+        StatisticsResponse res;
+        res.statistics = m_statisticsManager->getHighScores();
+
+        result.response = JsonResponsePacketSerializer::serializeHighScoreResponse(res);
+    }
+    else if (requestInfo.messageCode == PERSONAL_STATS_CODE)
+    {
+        StatisticsResponse res;
+        res.statistics = m_statisticsManager->getPersonalStats(m_username);
+
+        result.response = JsonResponsePacketSerializer::serializePersonalStatsResponse(res);
+    }
+
+    std::cout << "MenuRequestHandler got request code: " << (int)requestInfo.messageCode << std::endl;
 
     return result;
 }

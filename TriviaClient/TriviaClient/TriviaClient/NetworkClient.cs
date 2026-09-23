@@ -17,15 +17,31 @@ namespace TriviaClient
     {
         private static TcpClient client;
         private static NetworkStream stream;
+        private static readonly object _sendLock = new object();
         private const string HOST = "127.0.0.1";
         private const int PORT = 8826;
 
         public const int LOGIN_CODE = 1;
         public const int SIGNUP_CODE = 2;
-        public const int HIGH_SCORE_CODE = 8;
-        public const int PERSONAL_STATS_CODE = 9;
         public const int CREATE_ROOM_CODE = 3;
 
+        public const int GET_ROOMS_CODE = 4;
+        public const int JOIN_ROOM_CODE = 5;
+
+        public const int LEAVE_ROOM_CODE = 6;
+        public const int LOGOUT_CODE = 7;
+
+
+        public const int HIGH_SCORE_CODE = 8;
+        public const int PERSONAL_STATS_CODE = 9;
+        public const int GET_ROOM_STATE_REQ = 23;
+        public const int LEAVE_ROOM_REQ = 24;
+        public const int CLOSE_ROOM_REQ = 21;
+        public const int START_GAME_REQ = 22;
+        public const int LEAVE_GAME_REQ = 31;
+        public const int GET_QUESTION_REQ = 32;
+        public const int SUBMIT_ANSWER_REQ = 33;
+        public const int GET_GAME_RESULT_REQ = 34;
         public static void ConnectNew()
         {
             Close();
@@ -59,26 +75,30 @@ namespace TriviaClient
 
         public static ServerResponse Send(int code, object data)
         {
-            if(client == null || !client.Connected)
+            lock (_sendLock)
             {
-                ConnectNew();
+                if (client == null || !client.Connected)
+                {
+                    ConnectNew();
+                }
+
+                string json = JsonSerializer.Serialize(data);
+                byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
+
+                byte[] packet = new byte[5 + jsonBytes.Length];
+                packet[0] = (byte)code;
+                packet[1] = (byte)((jsonBytes.Length >> 24) & 0xFF);
+                packet[2] = (byte)((jsonBytes.Length >> 16) & 0xFF);
+                packet[3] = (byte)((jsonBytes.Length >> 8) & 0xFF);
+                packet[4] = (byte)(jsonBytes.Length & 0xFF);
+
+                Buffer.BlockCopy(jsonBytes, 0, packet, 5, jsonBytes.Length);
+
+                stream.Write(packet, 0, packet.Length);
+                stream.Flush();
+
+                return Receive();
             }
-
-            string json = JsonSerializer.Serialize(data);
-
-            byte[] codeBytes = Encoding.UTF8.GetBytes(code.ToString());
-            byte[] lengthBytes = Encoding.UTF8.GetBytes(json.Length.ToString());
-            byte[] jsonBytes = Encoding.UTF8.GetBytes(json);
-
-            byte[] packet = new byte[codeBytes.Length + lengthBytes.Length + jsonBytes.Length];
-
-            Buffer.BlockCopy(codeBytes, 0, packet, 0, codeBytes.Length);
-            Buffer.BlockCopy(lengthBytes, 0, packet, codeBytes.Length, lengthBytes.Length);
-            Buffer.BlockCopy(jsonBytes, 0, packet, codeBytes.Length + lengthBytes.Length, jsonBytes.Length);
-
-            stream.Write(packet, 0, packet.Length);
-            stream.Flush();
-            return Receive();
         }
 
         public static ServerResponse Receive()

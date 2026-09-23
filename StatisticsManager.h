@@ -1,16 +1,9 @@
 #pragma once
 
 #include "SqliteDataBase.h"
+#include "structs.h"
 #include <vector>
 #include <string>
-
-struct PlayerStatistics
-{
-	unsigned int gamesPlayed;
-	unsigned int correctAnswers;
-	unsigned int wrongAnswers;
-	float avgAnswerTime;
-};
 
 class StatisticsManager
 {
@@ -19,6 +12,8 @@ private:
 
 public:
 	StatisticsManager(SqliteDataBase* db);
-	
+
 	PlayerStatistics getPlayerStatistics(const std::string& username);
+	std::vector<std::string> getHighScores();
+	std::vector<std::string> getPersonalStats(const std::string& username);
 };

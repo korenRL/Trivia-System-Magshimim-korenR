@@ -1,20 +1,34 @@
 #include "RoomAdminRequestHandler.h"
 #include "RequestHandlerFactory.h"
 #include "JsonResponsePacketSerializer.h"
+#include "GameRequestHandler.h"
 #include "structs.h"
-RoomAdminRequestHandler::RoomAdminRequestHandler(Room room, LoggedUser user, RoomManager& roomManager, RequestHandlerFactory& handlerFactory)
-    : m_room(room), m_user(user), m_roomManager(roomManager), m_handlerFactory(handlerFactory)
+
+RoomAdminRequestHandler::RoomAdminRequestHandler(
+    Room room,
+    LoggedUser user, 
+    RoomManager& roomManager, 
+    RequestHandlerFactory& handlerFactory
+) 
+    : m_room(room),
+    m_user(user),
+    m_roomManager(roomManager), 
+    m_handlerFactory(handlerFactory)
 {
 }
 
-bool RoomAdminRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool RoomAdminRequestHandler::isRequestRelevant(
+    const RequestInfo& requestInfo
+) const
 {
     return requestInfo.messageCode == RequestCode::CLOSE_ROOM_REQ ||
         requestInfo.messageCode == RequestCode::START_GAME_REQ ||
         requestInfo.messageCode == RequestCode::GET_ROOM_STATE_REQ;
 }
 
-RequestResult RoomAdminRequestHandler::handleRequest(const RequestInfo& requestInfo)
+RequestResult RoomAdminRequestHandler::handleRequest(
+    const RequestInfo& requestInfo
+)
 {
     if (requestInfo.messageCode == RequestCode::CLOSE_ROOM_REQ)
     {
@@ -34,36 +48,53 @@ RequestResult RoomAdminRequestHandler::handleRequest(const RequestInfo& requestI
 
 RequestResult RoomAdminRequestHandler::closeRoom(const RequestInfo& requestInfo)
 {
+    m_roomManager.deleteRoom(m_room.metadata.id);
+
     CloseRoomResponse res;
     res.status = 1;
 
     RequestResult result;
     result.response = JsonResponsePacketSerializer::serializeCloseRoomResponse(res);
-    result.newHandler = nullptr; 
+    result.newHandler = m_handlerFactory.createMenuRequestHandler(m_user.username);
 
     return result;
 }
 
+/*
+* The game is created before the room becomes active.
+* This prevents members from entering gmaem ode before the
+* game obj exists.
+*/
 RequestResult RoomAdminRequestHandler::startGame(const RequestInfo& requestInfo)
 {
+    Room& room = m_roomManager.getRoom(m_room.metadata.id);
+    m_handlerFactory.getGameManager()->createGame(room);
+    room.metadata.isActive = 1;
+
     StartGameResponse res;
     res.status = 1;
 
     RequestResult result;
     result.response = JsonResponsePacketSerializer::serializeStartGameResponse(res);
-    result.newHandler = this;
+    result.newHandler = 
+        m_handlerFactory.createGameRequestHandler(
+            m_user, 
+            room.metadata.id
+        );
 
     return result;
 }
 
 RequestResult RoomAdminRequestHandler::getRoomState(const RequestInfo& requestInfo)
 {
+    Room& room = m_roomManager.getRoom(m_room.metadata.id);
+
     GetRoomStateResponse res;
     res.status = 1;
-    res.hasGameBegun = false;
-    res.players = {};
-    res.answerCount = 0;
-    res.answerTimeout = 10;
+    res.hasGameBegun = room.metadata.isActive == 1;
+    res.players = room.getAllUsers();
+    res.answerCount = room.metadata.numOfQuestionsInGame;
+    res.answerTimeout = room.metadata.timePerQuestion;
 
     RequestResult result;
     result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);

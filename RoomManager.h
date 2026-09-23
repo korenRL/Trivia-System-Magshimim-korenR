@@ -26,6 +26,7 @@ public:
 	void addUser(const std::string& username);
 	void removeUser(const std::string& username);
 	std::vector<std::string> getAllUsers() const;
+
 };
 
 class RoomManager
@@ -37,11 +38,18 @@ private:
 public:
 	RoomManager() = default;
 
-	int createRoom(const std::string& name, unsigned int maxPlayers, unsigned int numQuestions, unsigned int timePerQuestion);
+	int createRoom(
+		const std::string& name,
+		unsigned int maxPlayers,
+		unsigned int numQuestions, 
+		unsigned int timePerQuestion
+	);
+
 	std::vector<Room> getRooms() const;
 	bool joinRoom(unsigned int roomId, const std::string& username);
 	void leaveRoom(unsigned int roomId, const std::string& username);
 	void deleteRoom(unsigned int roomId);
 	unsigned int getRoomState(unsigned int roomId) const;
 	Room& getRoom(unsigned int roomId);
+	bool roomExists(unsigned int roomId) const;
 };

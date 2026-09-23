@@ -9,6 +9,8 @@
             <Button Content="Personal Stats" Height="40" Margin="0,10,0,0" Click="PersonalStats_Click" Background="#f0f0f0"/>
             <Button Content="Logout / Back to Login" Height="40" Margin="0,25,0,0" Click="Logout_Click" Background="#f0f0f0"/>
             <Button Content="Create Room" Height="40" Margin="0,10,0,0" Click="CreateRoom_Click" Background="#f0f0f0"/>
+            <Button Content="Join Room" Height="40" Margin="0,10,0,0" Click="JoinRoom_Click" Background="#f0f0f0"/>
+
         </StackPanel>
     </Grid>
 </Page>

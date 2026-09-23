@@ -1,6 +1,7 @@
 #include "RoomMemberRequestHandler.h"
 #include "RequestHandlerFactory.h"
 #include "JsonResponsePacketSerializer.h"
+#include "GameRequestHandler.h"
 #include "structs.h"
 
 RoomMemberRequestHandler::RoomMemberRequestHandler(Room room, LoggedUser user, RoomManager& roomManager, RequestHandlerFactory& handlerFactory)
@@ -8,13 +9,21 @@ RoomMemberRequestHandler::RoomMemberRequestHandler(Room room, LoggedUser user, R
 {
 }
 
-bool RoomMemberRequestHandler::isRequestRelevant(const RequestInfo& requestInfo)
+bool RoomMemberRequestHandler::isRequestRelevant(
+	const RequestInfo& requestInfo
+) const
 {
     return requestInfo.messageCode == RequestCode::LEAVE_ROOM_REQ ||
         requestInfo.messageCode == RequestCode::GET_ROOM_STATE_REQ;
 }
 
-RequestResult RoomMemberRequestHandler::handleRequest(const RequestInfo& requestInfo)
+/*
+* If the room becomes active, the handler changes to game mode.
+* If the room was closed by the admin, the member returns to the menu.
+*/
+RequestResult RoomMemberRequestHandler::handleRequest(
+	const RequestInfo& requestInfo
+)
 {
     if (requestInfo.messageCode == RequestCode::LEAVE_ROOM_REQ)
     {
@@ -30,28 +39,58 @@ RequestResult RoomMemberRequestHandler::handleRequest(const RequestInfo& request
 
 RequestResult RoomMemberRequestHandler::leaveRoom(const RequestInfo& requestInfo)
 {
+    m_roomManager.leaveRoom(m_room.metadata.id, m_user.username);
+
     LeaveRoomResponse res;
     res.status = 1;
 
     RequestResult result;
     result.response = JsonResponsePacketSerializer::serializeLeaveRoomResponse(res);
-    result.newHandler = nullptr; 
+    result.newHandler = m_handlerFactory.createMenuRequestHandler(m_user.username);
 
     return result;
 }
 
 RequestResult RoomMemberRequestHandler::getRoomState(const RequestInfo& requestInfo)
 {
-    GetRoomStateResponse res;
-    res.status = 1;
-    res.hasGameBegun = false;
-    res.players = {};
-    res.answerCount = 0;
-    res.answerTimeout = 10;
+	RequestResult result;
+	GetRoomStateResponse res;
 
-    RequestResult result;
-    result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
-    result.newHandler = this;
+	if (!m_roomManager.roomExists(m_room.metadata.id))
+	{
+		res.status = 0;
+		res.hasGameBegun = false;
+		res.players = {};
+		res.answerCount = 0;
+		res.answerTimeout = 0;
 
-    return result;
+		result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
+		result.newHandler = m_handlerFactory.createMenuRequestHandler(m_user.username);
+		return result;
+	}
+
+	Room& room = m_roomManager.getRoom(m_room.metadata.id);
+
+	res.status = 1;
+	res.hasGameBegun = room.metadata.isActive == 1;
+	res.players = room.getAllUsers();
+	res.answerCount = room.metadata.numOfQuestionsInGame;
+	res.answerTimeout = room.metadata.timePerQuestion;
+
+	result.response = JsonResponsePacketSerializer::serializeGetRoomStateResponse(res);
+
+	if (room.metadata.isActive == 1)
+	{
+		result.newHandler = 
+			m_handlerFactory.createGameRequestHandler(
+				m_user, 
+				room.metadata.id
+			);
+	}
+	else
+	{
+		result.newHandler = this;
+	}
+
+	return result;
 }
