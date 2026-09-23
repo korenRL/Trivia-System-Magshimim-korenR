@@ -1,0 +1,16 @@
+﻿<Page x:Class="TriviaClient.MenuPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="25">
+        <StackPanel>
+            <TextBlock Text="Menu" FontSize="40" FontWeight="Bold" Margin="0,0,0,25" HorizontalAlignment="Center"/>
+
+            <Button Content="High Scores" Height="40" Click="HighScores_Click" Background="#f0f0f0"/>
+            <Button Content="Personal Stats" Height="40" Margin="0,10,0,0" Click="PersonalStats_Click" Background="#f0f0f0"/>
+            <Button Content="Logout / Back to Login" Height="40" Margin="0,25,0,0" Click="Logout_Click" Background="#f0f0f0"/>
+            <Button Content="Create Room" Height="40" Margin="0,10,0,0" Click="CreateRoom_Click" Background="#f0f0f0"/>
+            <Button Content="Join Room" Height="40" Margin="0,10,0,0" Click="JoinRoom_Click" Background="#f0f0f0"/>
+
+        </StackPanel>
+    </Grid>
+</Page>

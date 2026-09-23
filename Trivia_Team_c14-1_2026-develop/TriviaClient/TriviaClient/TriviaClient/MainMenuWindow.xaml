@@ -1,0 +1,34 @@
+﻿<Window x:Class="TriviaClient.MainMenuWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Trivia - Main Menu" Height="400" Width="450"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <StackPanel Width="260" VerticalAlignment="Center" HorizontalAlignment="Center">
+            <TextBlock Text="Main Menu"
+                   FontSize="28"
+                   FontWeight="Bold"
+                   HorizontalAlignment="Center"
+                   Margin="0,0,0,30"/>
+
+            <Button x:Name="CreateRoomButton"
+                Content="Create Room"
+                Height="40"
+                Margin="0,0,0,12"/>
+
+            <Button x:Name="JoinRoomButton"
+                Content="Join Room"
+                Height="40"
+                Margin="0,0,0,12"/>
+
+            <Button x:Name="StatisticsButton"
+                Content="Statistics"
+                Height="40"
+                Margin="0,0,0,12"/>
+
+            <Button x:Name="ExitButton"
+                Content="Exit"
+                Height="40"/>
+        </StackPanel>
+    </Grid>
+</Window>
